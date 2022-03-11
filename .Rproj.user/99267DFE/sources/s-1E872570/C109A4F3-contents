@@ -61,9 +61,9 @@ library(plotly)
 conflict_prefer("layout", "plotly")
 
 #first we register to upload to plotly
-key <- readLines("C:/Users/mbc5867/OneDrive - The Pennsylvania State University/Documents/GitHub/usefull/api_key_plotly.txt")
-Sys.setenv("plotly_username"="mladencucak")
-Sys.setenv("plotly_api_key"="OGrlWyrVJ64vb7pkxPMa")
+# Please register 
+Sys.setenv("plotly_username"="XXXX")
+Sys.setenv("plotly_api_key"="XXXX")
 
 
 ##################################################################

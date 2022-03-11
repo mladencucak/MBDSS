@@ -1,9 +1,9 @@
 {
     "id": "C109A4F3",
-    "path": "~/GitHub/MBDSS/scr/5.inf_mod.R",
+    "path": "C:/Users/mbc5867/Documents/GitHub/MBDSS/scr/5.inf_mod.R",
     "project_path": "scr/5.inf_mod.R",
     "type": "r_source",
-    "hash": "1171452170",
+    "hash": "0",
     "contents": "",
     "dirty": false,
     "created": 1646179973327.0,
@@ -12,15 +12,15 @@
     "properties": {
         "source_window_id": "",
         "Source": "Source",
-        "cursorPosition": "120,0",
-        "scrollLine": "0"
+        "cursorPosition": "121,14",
+        "scrollLine": "103"
     },
     "folds": "",
-    "lastKnownWriteTime": 1646935325,
+    "lastKnownWriteTime": 1646958409,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1646935326003,
+    "last_content_update": 1646958409185,
     "read_only": false,
     "read_only_alternatives": []
 }

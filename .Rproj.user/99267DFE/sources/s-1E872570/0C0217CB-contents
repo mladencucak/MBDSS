@@ -180,13 +180,14 @@ length(wthls)
 # 1. Sporulation conditions initiation
 ################################################
 # Sample weather data
-wth <- wthls[[3]]
+(wth <- wthls[[3]])
 
  
 # Probabilities for sporulation onset
 # Works as a lookup table, estiamting probability of sporulation onset based on 
 # nearest chilling unit vallue (cu_)
-(load(here("scr/model/cu_probs.RData")))
+load(here("scr/model/cu_probs.RData"))
+probdf
 
 dtlow = data.table(probdf, val = probdf$cu_low ) 
 setattr(dtlow, "sorted", "cu_low")  # let data.table know that variable is sorted
