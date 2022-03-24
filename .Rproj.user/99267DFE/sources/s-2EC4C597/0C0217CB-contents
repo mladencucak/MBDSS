@@ -183,53 +183,28 @@ length(wthls)
 (wth <- wthls[[3]])
 
  
+
 # Probabilities for sporulation onset
 # Works as a lookup table, estiamting probability of sporulation onset based on 
 # nearest chilling unit vallue (cu_)
 load(here("scr/model/cu_probs.RData"))
-probdf
 
-dtlow = data.table(probdf, val = probdf$cu_low ) 
-setattr(dtlow, "sorted", "cu_low")  # let data.table know that variable is sorted
-setkey(dtlow, val) # sorts the data
-dthigh =  data.table(probdf, val = probdf$cu_high  ) 
-setattr(dthigh, "sorted", "cu_high")   
-setkey(dthigh, val)  
+cu <- ifelse(wth$temp > 0 & wth$temp < 7.2, 1, 0)
+wth$cusum <- cumsum(cu)
 
+wth$prob_high <- pnorm(cusum,
+                tb[tb$mng == "high", "means"] %>% pull,
+                tb[tb$mng == "high", "sdev"] %>% pull)
+wth$prob_low <- pnorm(cusum,
+               tb[tb$mng == "low", "means"] %>% pull, 
+               tb[tb$mng == "low", "sdev"] %>% pull)
 
-wth$cu <-  ifelse(wth$temp > 0 & wth$temp < 7.2, 1, 0)
-wth$cusum <- cumsum(wth$cu)
-wth$cu <-NULL
+start.prob <- .01
 
-# if(max(x$cusum)<min(probdf$cu_low) )
-wth$prob_low <- 0
-wth[wth$cusum < min(probdf$cu_low) ,"prob_low" ] <- 0
-wth[ wth$cusum > max(probdf$cu_low) ,"prob_low" ] <- 1
-
-wthx <- wth[wth$cusum >= min(probdf$cu_low) & wth$cusum <= max(probdf$cu_low) , ]
-
-wthx$prob_low  <- 
-  sapply(wthx$cusum, function(y){dtlow[J(y), roll = "nearest"][ 1,1] %>% pull()})
-
-wth[wth$cusum >= min(probdf$cu_low) & wth$cusum <= max(probdf$cu_low), "prob_low"] <- 
-  wthx$prob_low
+wth$start_high <-wth[which.min(abs(wth$cu_high - start.prob)), "datetime" ]%>% pull()
+wth$start_low <-wth[which.min(abs(wth$cu_low - start.prob)),"datetime" ]%>% pull()
 
 
-
-wth$prob_high <- 0
-wth[wth$cusum < min(probdf$cu_high) ,"prob_high" ] <- 0
-wth[ wth$cusum > max(probdf$cu_high) ,"prob_high" ] <- 1
-
-wthx <- wth[wth$cusum >= min(probdf$cu_high)& wth$cusum <= max(probdf$cu_high) , ]
-
-wthx$prob_high  <- 
-  sapply(wthx$cusum, function(y){dthigh[J(y), roll = "nearest"][ 1,1] %>% pull()})
-
-wth[wth$cusum >= min(probdf$cu_high)& wth$cusum <= max(probdf$cu_high) ,"prob_high" ] <- 
-  wthx$prob_high
-
-wth$start_low <- wth[wth$cusum >= min(probdf$cu_low),"datetime"][1,] %>% pull()
-wth$start_high <- wth[wth$cusum >= min(probdf$cu_high),"datetime"][1,] %>% pull()
 wth[3000:3200, ] %>% 
   mutate(dte = as.Date(datetime)) %>% 
   select(dte, cusum, prob_high, prob_low) %>% 
@@ -506,55 +481,18 @@ ggplot(wth, aes(datetime , cusum))+
 ##########################################################
 # The model function
 ##########################################################
+# load the infection model 
+load( here("scr/model/inf_model.RData"))
+
+# cumulative probability of sporulation parameters
+load(here("scr/model/cu_probs.RData"))
+spor.model = tb
+inf.model = mod
 
 # The model is wrapped into a function for easier apllication to lager data set
-MBRisk <- function(wth){
-  
-  
-  
-  dtlow = data.table(probdf, val = probdf$cu_low ) 
-  setattr(dtlow, "sorted", "cu_low")  # let data.table know that variable is sorted
-  setkey(dtlow, val) # sorts the data
-  dthigh =  data.table(probdf, val = probdf$cu_high  ) 
-  setattr(dthigh, "sorted", "cu_high")   
-  setkey(dthigh, val)  
-  
-  
-  wth$cu <-  ifelse(wth$temp > 0 & wth$temp < 7.2, 1, 0)
-  wth$cusum <- cumsum(wth$cu)
-  wth$cu <-NULL
-  
-  # if(max(x$cusum)<min(probdf$cu_low) )
-  wth$prob_low <- 0
-  wth[wth$cusum < min(probdf$cu_low) ,"prob_low" ] <- 0
-  wth[ wth$cusum > max(probdf$cu_low) ,"prob_low" ] <- 1
-  
-  wthx <- wth[wth$cusum >= min(probdf$cu_low) & wth$cusum <= max(probdf$cu_low) , ]
-  
-  wthx$prob_low  <- 
-    sapply(wthx$cusum, function(y){dtlow[J(y), roll = "nearest"][ 1,1] %>% pull()})
-  
-  wth[wth$cusum >= min(probdf$cu_low) & wth$cusum <= max(probdf$cu_low), "prob_low"] <- 
-    wthx$prob_low
-  
-  
-  
-  wth$prob_high <- 0
-  wth[wth$cusum < min(probdf$cu_high) ,"prob_high" ] <- 0
-  wth[ wth$cusum > max(probdf$cu_high) ,"prob_high" ] <- 1
-  
-  wthx <- wth[wth$cusum >= min(probdf$cu_high)& wth$cusum <= max(probdf$cu_high) , ]
-  
-  wthx$prob_high  <- 
-    sapply(wthx$cusum, function(y){dthigh[J(y), roll = "nearest"][ 1,1] %>% pull()})
-  
-  wth[wth$cusum >= min(probdf$cu_high)& wth$cusum <= max(probdf$cu_high) ,"prob_high" ] <- 
-    wthx$prob_high
-  
-  wth$start_low <- wth[wth$cusum >= min(probdf$cu_low),"datetime"][1,] %>% pull()
-  wth$start_high <- wth[wth$cusum >= min(probdf$cu_high),"datetime"][1,] %>% pull()
-  
-  
+MBRisk <- function(wth, 
+                   spor.model, 
+                   inf.model ){
   
   # Set min thresholds to enable model runs
   rh_thresh <- 90
@@ -586,8 +524,29 @@ MBRisk <- function(wth){
   }
   
   
+  # Probabilities for sporulation onset
+  # Works as a lookup table, estiamting probability of sporulation onset based on 
   
-  # conditions for sporulation
+  cu <- ifelse(wth$temp > 0 & wth$temp < 7.2, 1, 0)
+  wth$cusum <- cumsum(cu)
+  
+  wth$prob_high <- pnorm(cusum,
+                         spor.model[spor.model$mng == "high", "means"] %>% pull,
+                         spor.model[spor.model$mng == "high", "sdev"] %>% pull)
+  wth$prob_low <- pnorm(cusum,
+                        spor.model[spor.model$mng == "low", "means"] %>% pull, 
+                        spor.model[spor.model$mng == "low", "sdev"] %>% pull)
+  
+  start.prob <- .01
+  
+  wth$start_high <-wth[which.min(abs(wth$cu_high - start.prob)), "datetime" ]%>% pull()
+  wth$start_low <-wth[which.min(abs(wth$cu_low - start.prob)),"datetime" ]%>% pull()
+  
+  
+  
+  
+  
+  # conditions for infection
   wet_dur <- ifelse(rh >= 90 | rain> rain_thresh, 1,0)
   
   criteria <- as.numeric(temp >= temp_thresh & wet_dur == 1)
@@ -610,15 +569,15 @@ MBRisk <- function(wth){
       stats::ave(criteria, cumsum(criteria == 0), FUN = cumsum)
   )
   dff <- data.frame(temp = temp, wet_dur=criteria_sum)
-  wth$inf <- plogis(predict(mod, newdata=dff))
+  wth$inf <- plogis(predict(inf.model, newdata=dff))
   
   # dff$inf <-ifelse(dff$wet_dur == 0,0, dff$inf)
   
-  return(dff)
-}
+return(wth)
+  }
 
 
-MBRisk(wth)
+system.time(MBRisk(wth, tb, mod))
 
 
 ############################################################
@@ -635,15 +594,15 @@ MBRisk(wth)
 # Temps above 65F during infection period times 
 
 
-# for (i in 1:length(wthls)) {
-#   x <- wthls[[i]]
-#   # (x <- wthls[[12]])
-# 
-#   wthls[[i]] <-  MBRisk(wth)
-# 
-#   print(paste(i,",", round(i/length(wthls),3)))
-#   done <- i
-# }
+for (i in 1:length(wthls)) {
+  x <- wthls[[i]]
+  # (x <- wthls[[12]])
+
+  wthls[[i]] <-  MBRisk(wth,tb, mod)
+
+  print(paste(i,",", round(i/length(wthls),3)))
+  done <- i
+}
 
 beepr::beep()
 
@@ -667,18 +626,18 @@ cl <- makeCluster(detectCores())
 clusterExport(cl, c("probdf",
                     "wthls",
                     "MBRisk",
-                    "mod"
+                    "mod",
+                    "tb"
                      ))
 
 clusterEvalQ(cl, library("tidyverse", quietly = TRUE, verbose = FALSE))
 clusterEvalQ(cl, library("here", quietly = TRUE, verbose = FALSE))
-clusterEvalQ(cl, library("data.table", quietly = TRUE, verbose = FALSE))
-
+ 
 
  
 
 wthls <-
-  pbapply::pblapply(wthls, MBRisk, cl = cl)
+  pbapply::pblapply(wthls, MBRisk,mod,tb, cl = cl)
 beepr::beep()
 
 # save(wthls, file = here("out/val/wthls.RData"))
@@ -700,7 +659,7 @@ wthls %>%
   
   mutate(doy = yday(date)) 
 
- dat %>% 
+dat %>% 
    pivot_longer(cols = c(prob_low, prob_high),
                 names_to = "mng" ) %>% 
    mutate(mng=ifelse(mng == "prob_low", "Low Mng", "High Mng."),

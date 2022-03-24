@@ -186,19 +186,10 @@ dta_chill %>%
               num = n()))
  
 # probability of the apothecia presence is calculated for the two management levels 
-# normal distribution is assumed. Such assumption can grow stronger with growing data set 
-(probdf <-
-    tibble(
-      prop = seq(.001, .999, by = .001),
-      cu_high = qnorm(seq(.001, .999, by = .001),
-                      tb[tb$mng == "high", "means"] %>% pull,
-                      tb[tb$mng == "high", "sdev"] %>% pull),
-      cu_low = qnorm(seq(.001, .999, by = .001),
-                     tb[tb$mng == "low", "means"] %>% pull, 
-                     tb[tb$mng == "low", "sdev"] %>% pull)
-    ))
+# normal distribution is assumed. Such assumption and model parameters 
+# can be further substantiated as the data set is growing  
 
-save(probdf, file = here("scr/model/cu_probs.RData"))
+save(tb, file = here("scr/model/cu_probs.RData"))
 
 
 # Visualise distribution

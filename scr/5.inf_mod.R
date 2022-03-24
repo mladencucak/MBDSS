@@ -38,6 +38,7 @@ if (length(new.packages))
 packages_load <-
   lapply(list.of.packages, require, character.only = TRUE)
 
+
 #Print warning if there is a problem with installing/loading some of packages
 if (any(as.numeric(packages_load) == 0)) {
   warning(paste("Package/s", paste(list.of.packages[packages_load != TRUE]), "not loaded!"))
