@@ -72,6 +72,31 @@ load(file = here("dat/ana/chill.RData"))
 load(file = here::here("dat", "raw", "final", "dis_long.RData"))
 
 
+
+
+# Distance between bio sites and locations  
+bind_rows(ch_ls) %>% 
+  separate(id, into = c("loc", "yr"), remove = FALSE) %>% 
+  mutate(
+    mng = ifelse(loc == "Whatcom", "low",
+                 ifelse(loc == "Skagit"& yr <= 2017, "low", "high"))
+  ) %>% 
+  select(loc, stna, dist, yr) %>% 
+  distinct() %>% 
+  arrange(yr, loc)
+
+bind_rows(ch_ls) %>% 
+  separate(id, into = c("loc", "yr"), remove = FALSE) %>% 
+  mutate(
+    mng = ifelse(loc == "Whatcom", "low",
+                 ifelse(loc == "Skagit"& yr <= 2017, "low", "high"))
+  ) %>%   
+select(loc, stna, dist, yr) %>% 
+  distinct() %>% 
+  summarise(average_distance = mean(dist),
+            min_dist = min(dist),
+            max_dist = max(dist))
+
 dta <- 
 bind_rows(ch_ls) %>% 
   filter(sporulated == "yes") %>%

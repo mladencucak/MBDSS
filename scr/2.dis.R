@@ -169,9 +169,10 @@ wthh %>%
 
 wth_ls <- list()#list list for hourly wth
 wthd_ls <- list()#list daily wth
- ch_ls<- list() #chill hour sums from different dates
+ch_ls<- list() #chill hour sums from different dates
+dis_ls <-  list()
 
-   for (i in seq_along(dat_sum[["loc"]])) {
+for (i in seq_along(dat_sum[["loc"]])) {
      # i=7
     #apothecia location and range of dates
     (loc <- dat_sum[i , "loc"] %>% pull())
@@ -524,7 +525,8 @@ wthd_ls <- list()#list daily wth
      
   }
  
+dis_ls
 
- save(ch_ls, file = here("dat/ana/chill.RData"))
- save(wthd_ls, file = here("dat/ana/wthd_ls.RData"))
+save(ch_ls, file = here("dat/ana/chill.RData"))
+save(wthd_ls, file = here("dat/ana/wthd_ls.RData"))
 

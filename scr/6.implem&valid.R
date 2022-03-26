@@ -577,7 +577,7 @@ return(wth)
   }
 
 
-MBRisk(wth, tb, mod)
+system.time(MBRisk(wth, tb, mod))
 
 
 ############################################################
