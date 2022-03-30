@@ -308,19 +308,6 @@ text_size <- 14
  
 format.mmdd <- function(x, format = "%b-%d", ...) format(as.Date(x), format = format, ...)
 
-
-wth %>% 
-  mutate(inf = ifelse(inf == 0 ,NA, inf)) %>%
-  group_by(mng) %>% 
-  mutate(inf = ifelse(datetime <spore_start ,NA, inf)) %>%  
-  mutate( start_lab  = substring(as.character(as.Date(spore_start )), 6),
-          # start_lab =   paste(month.abb[as.numeric(strsplit( start_lab, "-")[[1]][[1]])],
-          #                     strsplit( start_lab, "-")[[1]][[2]], sep = "-")
-  ) %>% 
-  mutate(col_inf = ifelse(inf < 2, "green",
-                          ifelse(inf >=2& inf<.4, "orange", 
-                                 ifelse(inf >= .4, "red", "gray")))) %>% 
-  filter(doy<200) 
  
  
 
@@ -335,7 +322,7 @@ wth %>%
           #                     strsplit( start_lab, "-")[[1]][[2]], sep = "-")
   ) %>% 
   mutate(col_inf = ifelse(inf < .2, "green",
-                          ifelse(inf >=.2& inf<.4, "orange", 
+                          ifelse(inf >=.2& inf<med_max, "orange", 
                                  ifelse(inf >= 40, "red", "gray")))) %>% 
   filter(doy<200) %>% 
   ggplot(aes(datetime, inf))+
@@ -493,6 +480,7 @@ inf.model = mod
 MBRisk <- function(wth, 
                    spor.model, 
                    inf.model ){
+  # wth <- wthls[[1]]
   
   # Set min thresholds to enable model runs
   rh_thresh <- 90
@@ -530,17 +518,17 @@ MBRisk <- function(wth,
   cu <- ifelse(wth$temp > 0 & wth$temp < 7.2, 1, 0)
   wth$cusum <- cumsum(cu)
   
-  wth$prob_high <- pnorm(cusum,
+  wth$prob_high <- pnorm(wth$cusum,
                          spor.model[spor.model$mng == "high", "means"] %>% pull,
                          spor.model[spor.model$mng == "high", "sdev"] %>% pull)
-  wth$prob_low <- pnorm(cusum,
+  wth$prob_low <- pnorm(wth$cusum,
                         spor.model[spor.model$mng == "low", "means"] %>% pull, 
                         spor.model[spor.model$mng == "low", "sdev"] %>% pull)
   
   start.prob <- .01
   
-  wth$start_high <-wth[which.min(abs(wth$cu_high - start.prob)), "datetime" ]%>% pull()
-  wth$start_low <-wth[which.min(abs(wth$cu_low - start.prob)),"datetime" ]%>% pull()
+  wth$start_high <-wth[which.min(abs(wth$prob_high - start.prob)), "datetime" ]%>% pull()
+  wth$start_low <-wth[which.min(abs(wth$prob_low - start.prob)),"datetime" ]%>% pull()
   
   
   
@@ -581,7 +569,7 @@ system.time(MBRisk(wth, tb, mod))
 
 
 ############################################################
-# Model validation
+# Model evaluation
 ############################################################
 
  
@@ -598,7 +586,7 @@ for (i in 1:length(wthls)) {
   x <- wthls[[i]]
   # (x <- wthls[[12]])
 
-  wthls[[i]] <-  MBRisk(wth,tb, mod)
+  wthls[[i]] <-  MBRisk(x,tb, mod)
 
   print(paste(i,",", round(i/length(wthls),3)))
   done <- i
@@ -606,39 +594,43 @@ for (i in 1:length(wthls)) {
 
 beepr::beep()
 
-hightemps <- 
+# check for temperatures higher than 18.33 C
+(hightemps <- 
 wthls %>% 
   bind_rows() %>% 
   separate(envir, into = c("stna", "season")) %>% 
   mutate(mn = month(date)) %>% 
   mutate(high_temp = ifelse(temp>18.3333, 1,0)) %>% 
   group_by(mn) %>% 
-  summarise(temp = sum(high_temp))
+  summarise(temp = sum(high_temp)))
 
-  mutate(hightemps, mn = factor(mn, levels =c(11, 12, 1:5)))
-  
+   
  
 
   # load the model 
-  load( here("scr/model/inf_model.RData"))
-  
-cl <- makeCluster(detectCores())
-clusterExport(cl, c("probdf",
-                    "wthls",
-                    "MBRisk",
-                    "mod",
-                    "tb"
-                     ))
-
-clusterEvalQ(cl, library("tidyverse", quietly = TRUE, verbose = FALSE))
-clusterEvalQ(cl, library("here", quietly = TRUE, verbose = FALSE))
- 
-
- 
-
-wthls <-
-  pbapply::pblapply(wthls, MBRisk,mod,tb, cl = cl)
-beepr::beep()
+#   load( here("scr/model/inf_model.RData"))
+#   
+# cl <- makeCluster(detectCores())
+# clusterExport(cl, c( 
+#                     "wthls",
+#                     "MBRisk",
+#                     "mod",
+#                     "tb"
+#                      ))
+# 
+# clusterEvalQ(cl, library("tidyverse", quietly = TRUE, verbose = FALSE))
+# clusterEvalQ(cl, library("here", quietly = TRUE, verbose = FALSE))
+#  
+# 
+# lapply(wthls, function(x){
+#   MBRisk(x, mod, tb)
+# })
+# 
+# wthlsparalel <-
+#   pbapply::pblapply(wthls, function(x){
+#     MBRisk(x, mod, tb)
+#     }, cl = cl)
+# beepr::beep()
 
 # save(wthls, file = here("out/val/wthls.RData"))
 load(file = here("out/val/wthls.RData"))
@@ -652,40 +644,188 @@ wthls %>%
   summarise( 
     prob_low = mean(prob_low),
     prob_high = mean(prob_high),
-    inf = sum(inf)
+    inf = sum(inf),
+    start_low = unique(start_low),
+    start_high = unique(start_high)
   ) %>% 
   ungroup() %>% 
-  separate(envir, into = c("stna", "season")) %>% 
-  
+  separate(envir, into = c("stna", "season"), remove = F) %>% 
+  mutate(season = as.numeric(season)) %>% 
   mutate(doy = yday(date)) 
+ 
+#Reproducble from this point 
+datls <- 
+dat %>%
+  filter(doy <200) %>% 
+  split(f= .$envir) %>% 
+  lapply(., function(dff){
+   df <-  dff[which.min(abs(dff$prob_low - .01)),"doy"]
+   df$regime <- "low"
+   df <- 
+   bind_rows(df,
+   data.frame(doy = dff[which.min(abs(dff$prob_high - .01)),"doy"] %>% pull(),
+              regime = "high"))
+   df$envir <- dff$envir[1]
+   return(df)
+   }) %>% bind_rows()
 
-dat %>% 
-   pivot_longer(cols = c(prob_low, prob_high),
-                names_to = "mng" ) %>% 
-   mutate(mng=ifelse(mng == "prob_low", "Low Mng", "High Mng."),
-          inf = inf * 100) %>% 
-   
-   mutate(value = 100 *value) %>% 
-  ggplot()+
-  geom_line(aes(doy, value), size = .01)+
-  facet_wrap(~stna)
+labs.d <- 
+datls %>% 
+  group_by(regime) %>% 
+  summarise(`50%` = mean(doy),
+            `25%` = quantile(doy, .25),
+            `75%` = quantile(doy, .75),
+            `5%` = quantile(doy, .05),
+            `95%` = quantile(doy, .95)
+  ) %>% 
+  pivot_longer(cols = !regime) %>% 
+  mutate(date = 
+           lubridate::as_date(value, origin = "2016-01-01"),
+         date.m = format(date, "%d-%m")) %>% 
+  mutate( name = factor(name)) %>% 
+  mutate(date.m = paste0(date.m, "(", name, ")"))
+  
+levels(labs.d$name) <- levels(labs.d$name)[c(2,1,3,4,5)]
+ 
 
 
- dat %>%
-   filter(doy <200) %>% 
-   group_by(stna, doy) %>% 
-   summarise(inf = mean(inf)) %>% 
-   group_by(stna) %>% 
-   mutate(cumulative_infection_risk = cumsum(inf)) %>% 
-   ggplot(aes(doy, cumulative_infection_risk, color = stna)) +
-   geom_line( size = .01)
-   facet_wrap( ~ stna)
+datls %>% 
+  mutate(date = 
+           lubridate::as_date(doy, origin = "2016-01-01")) %>% 
+  left_join(., labs.d) %>% 
+  ggplot(aes(regime, date))+
+  geom_boxplot(width = .5,color = "gray", notch = TRUE)+
+  geom_jitter(width =.2, size = .5)+
+  geom_text(aes(label = date.m, x =ifelse(regime=="high",1.5,2.5), 
+                 y = date
+                # color = name
+                ),
+            data = labs.d,
+            size = 2.5,
+            angle = 20
+             )+
+   coord_flip()+
+  xlab("Management")+
+  theme_bw()+
+  theme(axis.title.x = element_blank())
+  
+ggsave(here("out/Spor_start_Dur_Intensity.png"), 
+       width = 6.5, height = 3.2, dpi = 600)
+shell.exec(here("out/Spor_start_Dur_Intensity.png"))
+
+
+#Infection model evaluation 
+datls %>% 
+  group_by(regime) %>% 
+  filter(doy>85) %>% head(20) %>% 
+  mutate(date = 
+           lubridate::as_date(doy, origin = "2016-01-01"),
+         date = format(date, "%m-%d"))
+
+ #
+lsrisk <- list()
  
- dat %>%
-   filter(doy <200) %>% 
-   group_by(stna, doy) %>% 
-   summarise(inf = sum(inf))
- 
- 
- 
- 
+for (i in seq(wthls)) {
+  # i = 2
+  dff <- wthls[[i]]
+  
+  first <- which.min(abs(dff$prob_low - .01))
+  duration <- 28*24
+  last <- first + duration
+  
+  dfrisk <- 
+  dff[first : last,] %>% 
+    mutate(date = as_date(datetime)) %>% 
+    group_by(date) %>% 
+    summarise(inf = max(inf)) %>%
+    mutate(risk = ifelse(inf < .2, 0,
+                            ifelse(inf >=.2& inf<.35, 1, 
+                                   ifelse(inf >= .35, 2, NA)))) %>% 
+    group_by(risk) %>% 
+    summarise(count = n())
+  
+  dfrisk$regime <- "low"
+  
+  first <- which.min(abs(dff$prob_high - .01))
+  duration <- 28*24
+  last <- first + duration
+  
+  dfriskhigh <- 
+    dff[first : last,] %>% 
+    mutate(date = as_date(datetime)) %>% 
+    group_by(date) %>% 
+    summarise(inf = max(inf)) %>%
+    mutate(risk = ifelse(inf < .2, 0,
+                         ifelse(inf >=.2& inf<.35, 1, 
+                                ifelse(inf >= .35, 2, NA)))) %>% 
+    group_by(risk) %>% 
+    summarise(count = n())
+  
+  dfriskhigh$regime <- "high"
+  lsrisk[[i]] <-  rbind(dfrisk, dfriskhigh) 
+  
+  }
+
+pallet <- c("#99c140","#e7b416",  "#cc3232")
+
+risk <- 
+  lsrisk %>% 
+  bind_rows() %>% 
+  mutate(risk = factor(risk)) %>%
+  drop_na()
+
+labs.d <- 
+  risk %>% 
+  group_by(regime, risk) %>% 
+  summarise(`50%` = mean(count),
+            `25%` = quantile(count, .25),
+            `75%` = quantile(count, .75),
+            `5%` = quantile(count, .05),
+            `95%` = quantile(count, .95)
+  ) %>% 
+  ungroup() %>% 
+  pivot_longer(cols = c(`50%` ,`25%`, `75%` , `5%`, `95%`)) %>% 
+  mutate(count = round(value, 1)) %>% 
+  select(-value) %>% 
+  mutate(date.m = paste0(count, "(", name, ")"))
+
+# levels(labs.d$name) <- levels(labs.d$name)[c(2,1,3,4,5)]
+
+
+risk %>% 
+  ggplot(aes(risk, count))+
+  geom_boxplot(width = .3,color = "gray", notch = TRUE)+
+  geom_jitter(aes(color = risk),width =.1, size = .5)+
+  # coord_flip()+
+  xlab("Management")+
+  scale_color_manual("Risk",
+                     values = pallet, 
+                     labels= c("No risk", "Medium", "High"))+
+  ggrepel::geom_text_repel(aes(label = date.m, 
+                x =
+                  ifelse(risk ==0, 1.5, 
+                         ifelse(risk == 1, 2.5,
+                                ifelse(risk== 2,3.5, NA))),
+                y = count,
+                color = risk
+  ),
+  data = labs.d,
+  size = 4,
+  max.overlaps = 20,
+  direction = "y"
+  # angle = 20
+  )+
+  ylab("Number of days per risk category")+
+  scale_x_discrete(expand = c(0,1.1))+
+  theme_bw()+
+  theme(axis.title.x = element_blank(),
+        legend.position = "bottom",
+        axis.text.x = element_blank(),
+        legend.text=element_text(size=13)
+        )+
+  facet_wrap(~regime)
+
+ggsave(here("out/Infection_evaluation.png"), 
+       width = 10, height = 7, dpi = 600)
+shell.exec(here("out/Infection_evaluation.png"))
+

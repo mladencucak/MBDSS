@@ -106,7 +106,7 @@ dtasum <-
 
 dtasum <-
   left_join(spor_dur,dtasum,by = "id" ) %>% 
-  separate(id, into = c( "Location","Year")) %>% 
+  separate(id, into = c( "Site","Season")) %>% 
   rename(Management = mng)
 
 dtasum <-
@@ -128,13 +128,13 @@ dtasum %>%
 l.start <-
   dtasum %>%
   filter(spor_start > 0) %>% 
-  lm(spor_start ~ Management + Year + Location, data = .)
+  lm(spor_start ~ Management + Season + Site, data = .)
 anova(l.start)
 m.start <- 
    dtasum %>%
   filter(spor_start > 0) %>% 
   coxph(Surv(spor_start, event = rep(1, nrow(.) )) ~
-                   Management + Year + Location,
+                   Management + Season + Site,
         data= .
                  )
 anova(m.start)
@@ -146,7 +146,7 @@ m.dur <-
   dtasum %>%
   filter(spor_start > 0) %>%
   
-lm(spor_dur  ~ Management + Year + Location, data =  .)
+lm(spor_dur  ~ Management + Season + Site, data =  .)
 anova(m.dur) 
 summary(m.dur)
 
@@ -155,17 +155,17 @@ m.dur <-
   dtasum %>%
   filter(spor_start > 0) %>%
   coxph(Surv(spor_dur, event = rep(1, nrow(.))) ~
-                 Management + Year + Location, data = .)
+                 Management + Season + Site, data = .)
 anova(m.dur)
 
 
 
 # Sporulation (area under the curve)
-m.spor <- lm(spor ~ Management + Year + Location, data =  dtasum)
+m.spor <- lm(spor ~ Management + Season + Site, data =  dtasum)
 anova(m.spor)
 summary(m.spor)
 
-m.spor <- glm(spor + .01 ~ Year + Management + Location,
+m.spor <- glm(spor + .01 ~ Season + Management + Site,
               family = Gamma(link = log),
               data = dtasum)
 drop1(m.spor, test = "Chisq")
@@ -197,13 +197,13 @@ loc_x_lab = 5
     theme(axis.title.x=element_blank(),
           axis.text.x=element_blank(),
           axis.ticks.x=element_blank())+
-    ylab("Start of Sporulation(DOY)"))
+    ylab("Onset of AP(DOY)"))
 
 
 (p2<-
     dtasum %>%
     filter(spor_start > 0) %>%
-    ggplot(aes(x = Year, y = spor_start)) +
+    ggplot(aes(x = Season, y = spor_start)) +
     theme_bw() +
     geom_boxplot(width= .2,alpha = .3, color = "gray") +
     geom_text(aes(year_x_lab, 65),
@@ -222,7 +222,7 @@ loc_x_lab = 5
 (p3<-
     dtasum %>%
     filter(spor_start > 0) %>%
-    ggplot(aes(x = Location, y = spor_start)) +
+    ggplot(aes(x = Site, y = spor_start)) +
     theme_bw() +
     geom_boxplot(width= .2,alpha = .3, color = "gray") +
     geom_text(aes(loc_x_lab, 60),
@@ -251,12 +251,12 @@ loc_x_lab = 5
     theme(axis.title.x=element_blank(),
           axis.text.x=element_blank(),
           axis.ticks.x=element_blank())+
-    ylab("Spor. duration(days)"))
+    ylab("AP duration(days)"))
 
 (p22<-
     dtasum %>%
     filter(spor_start > 0) %>%
-    ggplot(aes(x = Year, y = spor_dur)) +
+    ggplot(aes(x = Season, y = spor_dur)) +
     theme_bw() +
     geom_boxplot(width= .3,alpha = .3, color = "gray") +
     geom_text(aes(year_x_lab, -2),
@@ -273,7 +273,7 @@ loc_x_lab = 5
 (p23<-
     dtasum %>%
     filter(spor_start > 0) %>%
-    ggplot(aes(x = Location, y = spor_dur)) +
+    ggplot(aes(x = Site, y = spor_dur)) +
     theme_bw() +
     geom_boxplot(width= .3,alpha = .3, color = "gray") +
     geom_text(aes(loc_x_lab, -2),
@@ -300,11 +300,11 @@ loc_x_lab = 5
               parse=TRUE,
               hjust=1, size=label_size
     )+
-    ylab("Sporulation intensity(ausc)"))
+    ylab("AP intensity(ausc)"))
 
 (p32<-
     dtasum %>%
-    ggplot(aes(x = Year, y = spor)) +
+    ggplot(aes(x = Season, y = spor)) +
     theme_bw() +
     geom_boxplot(width= .3,alpha = .3, color = "gray") +
     geom_jitter(height = 0, width = .1)+
@@ -320,7 +320,7 @@ loc_x_lab = 5
 
 (p33<-
     dtasum %>%
-    ggplot(aes(x = Location, y = spor)) +
+    ggplot(aes(x = Site, y = spor)) +
     theme_bw() +
     geom_boxplot(width= .3,alpha = .3, color = "gray") +
     geom_jitter(height = 0, width = .1)+
@@ -346,7 +346,8 @@ ggpubr::ggarrange(
   widths = c(.9,1,1),
   ncol = 3, 
   nrow = 3)
-ggsave(here("out/Spor_start_Dur_Intensity.png"), width = 8.3, height = 7)
+ggsave(here("out/Spor_start_Dur_Intensity.png"), 
+       width = 8.4, height = 7)
 shell.exec(here("out/Spor_start_Dur_Intensity.png"))
 
 
