@@ -125,8 +125,7 @@ baseplot+
   # scale_color_brewer(palette = "Set1")+
   # scale_fill_brewer(palette = "Set1")+
   geom_text_repel(data = df_loc_sf[df_loc_sf$name != "corvallis", ],
-                  aes(x = lon, y = lat, label = name,  group = type,
-                      color = type),
+                  aes(x = lon, y = lat, label = name,  group = type ),
                   size = 3.2)+
   scale_color_manual(
     name = "Data:",
