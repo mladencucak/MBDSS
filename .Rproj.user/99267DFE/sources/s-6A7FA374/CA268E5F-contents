@@ -56,10 +56,8 @@ rm(packages_load, list.of.packages, new.packages)
 
 
 
-#####################################################
-# Find nearest stations
-#####################################################
-
+# Find nearest stations ---------------------------------------------------
+ 
 (df_loc <-
    read.csv(here::here("dat", "disease_loc.csv"), skip = 17) %>% 
    dplyr::select(-starts_with("X"))) 
