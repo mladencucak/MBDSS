@@ -1,0 +1,6 @@
+"county","name","lat","lon","year_beg","year_end","Management","Cultivar","WSU.AgWeathernet.station.","closest_1st","dist_1st","closest_2nd","dist_2nd","closest_3rd","dist_3rd","closest_4th","dist_4th","closest_5th","dist_5th"
+"Skagit","Sakuma",48.507231,-122.412137,NA,NA,"Organic","Liberty","Sakuma","Sakuma",2.71,"Mt.Vernon",7.89,"Fir.Island",16.78,"Arlington",36.66,"Coupeville",39.81
+"Whatcom","Enterprise",48.927329,-122.573603,NA,NA,"Unmanaged","Unknown/mixed","Lynden","Lynden",4.44,"Ten Mile",9.85,"Lawrence",19.06,"Nooksack",19.92,"Sakuma",49.9
+"Snohomish","Arlington",48.199723,-122.22483,NA,NA,"Organic","Reka ","Stanwood","Arlington",0.23,"Fir.Island",22.73,"Langley",26.95,"Mt.Vernon",29.09,"Snohomish",34.03
+"Island","Whidbey",48.325253,-122.56344,NA,NA,"Organic","Aurora","Coupeville","Fir.Island",11.02,"Coupeville",16.73,"Mt.Vernon",18.19,"Sakuma",23.51,"Arlington",28.5
+"corvallis","corvallis",44.564729,-123.242403,NA,NA,"Experiment","Berkeley","Corvallis East","Woodinvill",363.78,"Snohomish",381.15,"Chimacum",384.88,"Langley",387.13,"Sequim",391.88
