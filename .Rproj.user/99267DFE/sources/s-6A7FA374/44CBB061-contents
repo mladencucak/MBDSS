@@ -355,7 +355,7 @@ ReLab <- function(flab ,fvar ){
         substring(fvar, 6, 10))
 }
 
-
+# Add
 lab_date_g <- 3
 lab_date <- 3.7
 
@@ -381,7 +381,9 @@ dis_long %>%
 
 (pl <- 
     wthd_ls %>% bind_rows() %>% 
+    
     separate(id, c("loc", "yr"), remove = FALSE) %>% 
+    mutate(doy =yday(date)) %>% 
     mutate(across(sporulation,~ ifelse(dplyr::lag(.) == 0 & . == 0 & lead(.) == 0, NA, .))) %>% 
     mutate(sporulation = ifelse(date< spore_start, NA, sporulation)) %>% 
     mutate(rain = ifelse(rain == 0, NA, rain)) %>%
@@ -426,7 +428,9 @@ dis_long %>%
     geom_text(aes(spore_start - lab_date, apodot_pos, 
                   label = ReLab(  ifelse(spore_start == spore_end, "AS-E", "AS"),spore_start)),size = apodot)+
     geom_text(aes(spore_end + lab_date, apodot_pos, 
-                  label = ifelse(spore_start == spore_end, NA, ReLab( "AS", spore_end))),size = apodot)+
+                  label = ifelse(spore_start == spore_end, NA, ReLab( "AE", spore_end))),size = apodot)+
+    geom_text(aes(germ_start+ 30, apodot_pos, 
+                  label = ifelse(is.na(spore_start),"No apothecia presence", NA)),size = apodot)+
     # Sporulation percentages
     geom_point(aes(date, ifelse(sporulation > top, top-6, sporulation) , 
                    group = sporulation, colour = "Sporulating apothecia"), shape =17, size = 2, alpha = .8) +

@@ -3,7 +3,7 @@
     "path": "C:/Users/mbc5867/Documents/GitHub/MBDSS/scr/4. stats.R",
     "project_path": "scr/4. stats.R",
     "type": "r_source",
-    "hash": "3269240651",
+    "hash": "0",
     "contents": "",
     "dirty": false,
     "created": 1646251191594.0,
@@ -12,8 +12,8 @@
     "properties": {
         "source_window_id": "",
         "Source": "Source",
-        "cursorPosition": "348,0",
-        "scrollLine": "0"
+        "cursorPosition": "120,1",
+        "scrollLine": "62"
     },
     "folds": "",
     "lastKnownWriteTime": 1648613049,
