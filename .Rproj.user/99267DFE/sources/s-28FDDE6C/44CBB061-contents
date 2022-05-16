@@ -177,7 +177,7 @@ dta_mod %>%
   )
 
 ggsave(
-  filename = here::here("out", "initial_res", "chill", paste0(tit, ".png")),
+  filename = here::here("out", paste0(tit, ".png")),
   width = 8,
   height = 6.5,
   dpi = 300

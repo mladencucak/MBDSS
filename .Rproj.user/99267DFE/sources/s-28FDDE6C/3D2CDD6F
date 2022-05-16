@@ -1,26 +1,26 @@
 {
-    "id": "0C0217CB",
-    "path": "C:/Users/mbc5867/Documents/GitHub/MBDSS/scr/6.implem&valid.R",
-    "project_path": "scr/6.implem&valid.R",
+    "id": "3D2CDD6F",
+    "path": "C:/Users/mbc5867/Documents/GitHub/MBDSS/scr/4. stats.R",
+    "project_path": "scr/4. stats.R",
     "type": "r_source",
-    "hash": "4097061469",
+    "hash": "0",
     "contents": "",
     "dirty": false,
-    "created": 1646180099355.0,
+    "created": 1646251191594.0,
     "source_on_save": false,
-    "relative_order": 6,
+    "relative_order": 4,
     "properties": {
         "source_window_id": "",
         "Source": "Source",
-        "cursorPosition": "76,0",
-        "scrollLine": "9"
+        "cursorPosition": "350,0",
+        "scrollLine": "291"
     },
     "folds": "",
     "lastKnownWriteTime": 1648613049,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1648613049688,
+    "last_content_update": 1648613049629,
     "read_only": false,
     "read_only_alternatives": []
 }
