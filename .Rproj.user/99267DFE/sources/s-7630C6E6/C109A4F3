@@ -1,26 +1,26 @@
 {
-    "id": "AA8C1048",
-    "path": "C:/Users/mbc5867/Documents/GitHub/MBDSS/scr/1.wth.R",
-    "project_path": "scr/1.wth.R",
+    "id": "C109A4F3",
+    "path": "C:/Users/mbc5867/Documents/GitHub/MBDSS/scr/5.inf_mod.R",
+    "project_path": "scr/5.inf_mod.R",
     "type": "r_source",
     "hash": "0",
     "contents": "",
     "dirty": false,
-    "created": 1646176172842.0,
+    "created": 1646179973327.0,
     "source_on_save": false,
-    "relative_order": 1,
+    "relative_order": 5,
     "properties": {
         "source_window_id": "",
         "Source": "Source",
-        "cursorPosition": "728,28",
-        "scrollLine": "707"
+        "cursorPosition": "151,0",
+        "scrollLine": "108"
     },
     "folds": "",
-    "lastKnownWriteTime": 1646935315,
+    "lastKnownWriteTime": 1648076821,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1646935315962,
+    "last_content_update": 1648076821738,
     "read_only": false,
     "read_only_alternatives": []
 }

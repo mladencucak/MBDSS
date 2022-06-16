@@ -344,7 +344,11 @@ shell.exec(here("out", "all_wth_dis.png"))
 ####################################################
 # plot months around periods
 #####################################################
- 
+#Bio data: dis_long
+load(file = here::here("dat", "raw", "final", "dis_long.RData"))
+load(file = here("dat/ana/wthd_ls.RData"))
+
+
 linesize <- .45 #size of the line for variables
 
 top <- 30
@@ -412,11 +416,11 @@ dis_long %>%
     
     # Boost the zero line
     geom_hline(aes(yintercept = 0), color =gray.colors(12)[4] )+
-    # Environmental variables
     
-    geom_line(aes( x = date, y = temp,colour = "Mean daily temp. (˚C)"),
+    # Environmental variables
+    geom_line(aes( x = date, y = temp,colour = "Mean daily temp.(˚C)"),
               size = linesize) +
-    geom_line(aes(x = date, y = wmintemp_10,colour = "10-day rolling mean daily min. temp.(˚C)(dot-dash)"),
+    geom_line(aes(x = date, y = wmintemp_10,colour = "10-day rolling mean daily min. temp.(˚C)"),
               size = linesize, linetype = "twodash") +
     geom_col(aes(date,rain,fill = "Total daily precipitation (mm/day)"), 
              size = .9 ,inherit.aes = TRUE, width = 0.4) +
@@ -424,27 +428,27 @@ dis_long %>%
     geom_point(aes(date, frost, group = frosthr, size = frosthr), shape = 20)+
     
     # Labels for germination and sporulation dates    
-    geom_text(aes(germ_start - lab_date_g, apodot_pos, label = ReLab( "G",germ_start)), size = apodot)+
+    geom_text(aes(germ_start - lab_date_g, apodot_pos, label = ReLab( "G",germ_start)), size = apodot,show.legend = FALSE)+
     geom_text(aes(spore_start - lab_date, apodot_pos, 
-                  label = ReLab(  ifelse(spore_start == spore_end, "AS-E", "AS"),spore_start)),size = apodot)+
+                  label = ReLab(  ifelse(spore_start == spore_end, "AS-E", "AS"),spore_start)),size = apodot,show.legend = FALSE)+
     geom_text(aes(spore_end + lab_date, apodot_pos, 
-                  label = ifelse(spore_start == spore_end, NA, ReLab( "AE", spore_end))),size = apodot)+
+                  label = ifelse(spore_start == spore_end, NA, ReLab( "AE", spore_end))),size = apodot,show.legend = FALSE)+
     geom_text(aes(germ_start+ 30, apodot_pos, 
-                  label = ifelse(is.na(spore_start),"No apothecia presence", NA)),size = apodot)+
+                  label = ifelse(is.na(spore_start),"No apothecia presence", NA)),size = apodot,show.legend = FALSE)+
     # Sporulation percentages
     geom_point(aes(date, ifelse(sporulation > top, top-6, sporulation) , 
-                   group = sporulation, colour = "Sporulating apothecia"), shape =17, size = 2, alpha = .8) +
+                   group = sporulation, colour = "Sporulating apothecia (%)"), shape =17, size = 2, alpha = .8) +
     geom_text(aes(date-1, top-3, 
                   label =ifelse(!is.na(sporulation), paste0(sporulation, "%"), NA),
                   colour = "Apothecia percentage"
-    ),size = apodot)+
+    ),size = apodot,show.legend = FALSE)+
     #Theme and colors 
     scale_colour_manual(
       "Daily weather:",
       values = c(
-        "Mean daily temp. (˚C)" = "#ED2939",
-        "10-day rolling mean daily min. temp.(˚C)(dot-dash)" = "darkred",
-        "Sporulating apothecia" = "darkgreen"
+        "Mean daily temp.(˚C)" = "#ED2939",
+        "10-day rolling mean daily min. temp.(˚C)" = "darkred",
+        "Sporulating apothecia (%)" = "darkgreen"
       )
     ) +
     scale_fill_manual(name= NA, values = c("Total daily precipitation (mm/day)" = "blue")
@@ -452,9 +456,11 @@ dis_long %>%
     scale_y_continuous( breaks = seq(-10,top,10), limits = c(-10,top),expand = c(0, 0))+
     scale_x_date(date_labels = "%b", date_breaks = "1 month",expand = c(.03, .04))+
     
-    guides(fill=guide_legend(nrow=1,byrow=F,title.position = "top"),
-           color=guide_legend(nrow=2,byrow=F,title.position = "top"),
-           linetype=guide_legend(nrow=1,byrow=T,title.position = "top"))+
+    guides(fill=guide_legend(nrow=1,byrow=F,title.position = "top",override.aes = list(linetype = 0)),
+           color=guide_legend(nrow=2,byrow=F,title.position = "top",
+                              override.aes = list(shape = NA,linetype ="solid" )),
+           linetype=guide_legend(nrow=1,byrow=T,title.position = "top",override.aes = list(linetype ="twodash"))
+           )+
     theme_bw()+
     theme(
       text = element_text(size=10.8),

@@ -303,6 +303,7 @@ wth <-
 #Parameteres
 safe_max <- .2
 med_max <- .35
+
 text_size <- 14
  
  
