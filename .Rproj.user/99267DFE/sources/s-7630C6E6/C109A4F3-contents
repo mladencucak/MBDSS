@@ -134,29 +134,26 @@ dis_df <-
 
 
 deg <- 2
-fit_splines <- lm(dis_prop ~ 
-                    bs(temp, degree = deg, knots =3)  *
-                    bs(wet_dur, degree = deg, knots = 3),
-                  data = dis_df)
 
- fit_splines <- glmmTMB(dis_prop2 ~ poly(temp,2) * poly(wet_dur,2), 
-                                family = beta_family, 
-                                data = dis_df)
 fit_splines_noint <- glmmTMB(dis_prop2 ~ poly(temp,2) + (wet_dur + I(log(wet_dur+1))), 
                        family = beta_family, 
                        data = dis_df)
-fit_splines_int <- glmmTMB(dis_prop2 ~ poly(temp,2) * (wet_dur + I(log(wet_dur+1))), 
+fit_splines_int   <- glmmTMB(dis_prop2 ~ poly(temp,2) * (wet_dur + I(log(wet_dur+1))), 
                        family = beta_family, 
                        data = dis_df)
-anova(fit_splines_noint, fit_splines_int)
+anova(fit_splines, fit_splines_noint, fit_splines_int)
 
 fit_splines <- fit_splines_int
-summary(fit_splines)
+
+glmmTMB:::Anova.glmmTMB(fit_splines)
+glmmTMB:::Anova.glmmTMB(fit_splines_noint)
+glmmTMB:::Anova.glmmTMB(fit_splines_int)
+
 df_fit <- cbind(dis_df,fit =plogis(predict(fit_splines,dis_df))*100) 
 df_fit
 str(fit_splines)
 conf_int <- predict(fit_splines, se.fit = TRUE)
- upr <- plogis(conf_int$fit + 1.96 * conf_int$se.fit)*100
+upr <- plogis(conf_int$fit + 1.96 * conf_int$se.fit)*100
 lwr <- plogis(conf_int$fit - 1.96 * conf_int$se.fit)*100
 
 ggplot(data = df_fit,aes(x= wet_dur, y = dis_prop, colour = "Observed"))+
