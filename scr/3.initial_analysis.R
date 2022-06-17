@@ -209,7 +209,12 @@ dta_chill %>%
     summarise(means = mean(cu_),
               sdev = sd(cu_),
               num = n()))
- 
+# # A tibble: 2 × 4
+#     mng   means  sdev   num
+#   1 high  1829.  170.     5
+#   2 low   1620.  126.     7
+
+
 # probability of the apothecia presence is calculated for the two management levels 
 # normal distribution is assumed. Such assumption and model parameters 
 # can be further substantiated as the data set is growing  
@@ -243,13 +248,13 @@ shapiro.test(dta_chill[dta_chill$mng == "low", "cu_"] %>% pull)
 plot(density(dta_chill[dta_chill$mng == "high", "cu_"] %>% pull))
 plot(density(dta_chill[dta_chill$mng == "low", "cu_"] %>% pull))
 ## Plot using a qqplot
-qqnorm(dta_chill[dta_chill$mng == "high", "cu_"] %>% pull);qqline(dta_chill[dta_chill$mng == "high", "cu_"] %>% pull, col = 2)
-qqnorm(dta_chill[dta_chill$mng == "high", "cu_"] %>% pull);qqline(dta_chill[dta_chill$mng == "high", "cu_"] %>% pull, col = 2)
+qqnorm(dta_chill[dta_chill$mng == "high", "cu_"] %>% pull)
+qqline(dta_chill[dta_chill$mng == "high", "cu_"] %>% pull, col = 2)
+qqnorm(dta_chill[dta_chill$mng == "high", "cu_"] %>% pull)
+qqline(dta_chill[dta_chill$mng == "high", "cu_"] %>% pull, col = 2)
 
 
-# save probs as csv 
-write_csv(probdf, here("out/prob_sporulation_per_mng_table.csv"))
-
+ 
  
 
 #######################################################

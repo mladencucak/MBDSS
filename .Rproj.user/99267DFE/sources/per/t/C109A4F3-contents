@@ -138,14 +138,13 @@ deg <- 2
 fit_splines_noint <- glmmTMB(dis_prop2 ~ poly(temp,2) + (wet_dur + I(log(wet_dur+1))), 
                        family = beta_family, 
                        data = dis_df)
-fit_splines_int   <- glmmTMB(dis_prop2 ~ poly(temp,2) * (wet_dur + I(log(wet_dur+1))), 
-                       family = beta_family, 
-                       data = dis_df)
-anova(fit_splines, fit_splines_noint, fit_splines_int)
+fit_splines_int   <- glmmTMB(dis_prop2 ~ poly(temp,3) * (wet_dur + I(log(wet_dur+1))), 
+                             family = beta_family, 
+                             data = dis_df)
+anova( fit_splines_noint, fit_splines_int)
 
 fit_splines <- fit_splines_int
 
-glmmTMB:::Anova.glmmTMB(fit_splines)
 glmmTMB:::Anova.glmmTMB(fit_splines_noint)
 glmmTMB:::Anova.glmmTMB(fit_splines_int)
 

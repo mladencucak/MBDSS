@@ -185,24 +185,27 @@ length(wthls)
  
 
 # Probabilities for sporulation onset
-# Works as a lookup table, estiamting probability of sporulation onset based on 
-# nearest chilling unit vallue (cu_)
 load(here("scr/model/cu_probs.RData"))
+tb
+# # A tibble: 2 × 4
+#     mng   means  sdev   num
+#   1 high  1829.  170.     5
+#   2 low   1620.  126.     7
 
 cu <- ifelse(wth$temp > 0 & wth$temp < 7.2, 1, 0)
 wth$cusum <- cumsum(cu)
 
-wth$prob_high <- pnorm(cusum,
+wth$prob_high <- pnorm(wth$cusum,
                 tb[tb$mng == "high", "means"] %>% pull,
                 tb[tb$mng == "high", "sdev"] %>% pull)
-wth$prob_low <- pnorm(cusum,
+wth$prob_low <- pnorm(wth$cusum,
                tb[tb$mng == "low", "means"] %>% pull, 
                tb[tb$mng == "low", "sdev"] %>% pull)
 
 start.prob <- .01
 
-wth$start_high <-wth[which.min(abs(wth$cu_high - start.prob)), "datetime" ]%>% pull()
-wth$start_low <-wth[which.min(abs(wth$cu_low - start.prob)),"datetime" ]%>% pull()
+wth$start_high <-wth[which.min(abs(wth$prob_high - start.prob)), "datetime" ]%>% pull()
+wth$start_low <-wth[which.min(abs(wth$prob_low - start.prob)),"datetime" ]%>% pull()
 
 
 wth[3000:3200, ] %>% 
