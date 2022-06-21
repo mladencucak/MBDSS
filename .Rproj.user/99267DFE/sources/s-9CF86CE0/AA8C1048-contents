@@ -409,7 +409,20 @@ nrow(wthh[wthh$lw >1,] %>% distinct()) /nrow(wthh)
 
 
 
+# Check for >18C ----------------------------------------------------------
+wthh$wet_dur <- ifelse(wthh$rh >= 90 | wthh$rain > .1, 1, 0)
 
+
+
+wthh %>%
+  mutate(mn = lubridate::month(datetime)) %>%
+  filter(mn %in% c(2:4))
+
+wthh %>%
+  mutate(mn = lubridate::month(datetime)) %>%
+  filter(mn %in% c(2:4)) %>%
+  filter(temp > 18 & wet_dur == 1)
+ 
 summary(wthh)
 
 save(wthh, file =  here::here("dat", "wth", "weather_hourly.RData"))

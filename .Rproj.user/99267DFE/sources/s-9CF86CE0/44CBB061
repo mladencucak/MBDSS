@@ -3,7 +3,7 @@
     "path": "C:/Users/mbc5867/Documents/GitHub/MBDSS/scr/3.initial_analysis.R",
     "project_path": "scr/3.initial_analysis.R",
     "type": "r_source",
-    "hash": "2518593299",
+    "hash": "0",
     "contents": "",
     "dirty": false,
     "created": 1646958012979.0,
@@ -12,8 +12,8 @@
     "properties": {
         "source_window_id": "",
         "Source": "Source",
-        "cursorPosition": "211,0",
-        "scrollLine": "185"
+        "cursorPosition": "6,0",
+        "scrollLine": "26"
     },
     "folds": "",
     "lastKnownWriteTime": 1655412713,

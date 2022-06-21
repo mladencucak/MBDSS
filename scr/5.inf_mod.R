@@ -22,7 +22,8 @@ list.of.packages <-
     "naniar",
     "tibble",
     "tidyr",
-    "glmmTMB"
+    "glmmTMB",
+    "plotly"
   )
 
 new.packages <-
@@ -54,14 +55,19 @@ conflict_prefer("year", "lubridate")
 conflict_prefer("filter", "dplyr")
 conflict_prefer("yday", "lubridate")
 conflict_prefer("month", "lubridate")
+conflict_prefer("layout", "plotly")
 
 rm(packages_load, list.of.packages, new.packages)
 
 
-library(plotly)
-conflict_prefer("layout", "plotly")
+if(!c("insight", "performance") %in% installed.packages()){
+install.packages(c("insight", "performance"), repos = 'https://easystats.r-universe.dev')
+}
 
-#first we register to upload to plotly
+lapply(c("insight", "performance"), require, character.only = TRUE)
+
+
+ #first we register to upload to plotly
 # Please register 
 Sys.setenv("plotly_username"="XXXX")
 Sys.setenv("plotly_api_key"="XXXX")
@@ -120,38 +126,45 @@ ggplot(dis_df,aes(x= temp, y = dis_prop, group = factor(wet_dur), colour = facto
 
 
 ##################################################################
-# Fit SP lines
+# Fit model
 ##################################################################
-
-library("splines")
+ 
 
 dis_df <- 
   bind_rows(
     dis_df,
     dis_df[dis_df$temp == 2, ]%>% 
-      mutate( temp = 32)
+      mutate( temp =32)
   )
 
 
 deg <- 2
 
-fit_splines_noint <- glmmTMB(dis_prop2 ~ poly(temp,2) + (wet_dur + I(log(wet_dur+1))), 
+fit_noint <- glmmTMB(dis_prop2 ~ poly(temp,2) + (wet_dur + I(log(wet_dur+1))), 
                        family = beta_family, 
                        data = dis_df)
-fit_splines_int   <- glmmTMB(dis_prop2 ~ poly(temp,3) * (wet_dur + I(log(wet_dur+1))), 
+fit_int   <- glmmTMB(dis_prop2 ~ poly(temp,3) * (wet_dur + I(log(wet_dur+1))), 
                              family = beta_family, 
                              data = dis_df)
-anova( fit_splines_noint, fit_splines_int)
+anova( fit_noint, fit_int)
 
-fit_splines <- fit_splines_int
 
-glmmTMB:::Anova.glmmTMB(fit_splines_noint)
-glmmTMB:::Anova.glmmTMB(fit_splines_int)
 
-df_fit <- cbind(dis_df,fit =plogis(predict(fit_splines,dis_df))*100) 
+summary(fit_noint)
+summary(fit_int)
+glmmTMB:::Anova.glmmTMB(fit_noint)
+glmmTMB:::Anova.glmmTMB(fit_int)
+
+performance::r2(fit_noint)
+performance::r2(fit_int)
+
+
+fit <- fit_int
+
+df_fit <- cbind(dis_df,fit =plogis(predict(fit,dis_df))*100) 
 df_fit
-str(fit_splines)
-conf_int <- predict(fit_splines, se.fit = TRUE)
+str(fit)
+conf_int <- predict(fit, se.fit = TRUE)
 upr <- plogis(conf_int$fit + 1.96 * conf_int$se.fit)*100
 lwr <- plogis(conf_int$fit - 1.96 * conf_int$se.fit)*100
 
@@ -176,20 +189,20 @@ ggplot(data = df_fit,aes(x= temp, y = dis_prop, colour = "Observed"))+
 
 
 
-mod <- fit_splines
 
-save(mod, file = here("scr/model/inf_model.RData"))
+save(fit, file = here("scr/model/inf_model.RData"))
 
-x.seq <- seq(min(dis_df$temp, na.rm=TRUE), max(dis_df$temp, na.rm=TRUE), by = .1) 
+x.seq <- seq(min(dis_df$temp, na.rm=TRUE), max(dis_df$temp, na.rm=TRUE), by = 1) 
 y.seq <- seq(min(dis_df$wet_dur, na.rm=TRUE), max(dis_df$wet_dur, na.rm=TRUE), by = 1)
 
 predfun <- function(x,y){
   newdat <- data.frame(temp = x, wet_dur=y)
-  plogis(predict(mod, newdata=newdat))*100
+  plogis(predict(fit, newdata=newdat))*100
 }
 
 fit <- outer(x.seq, y.seq, Vectorize(predfun))
 
+fit[ ,1:2] <- 0
 # fit <- ifelse(fit>0, fit, 0)/100
 # fit <- ifelse(fit>1, 1, fit)
 
@@ -242,32 +255,36 @@ y <- list(
   zerolinecolor="black"
 )
 z <- list(
-  title = "Infection",
+  title = "Infection risk (%)",
   titlefont = f1,
   showticklabels = TRUE,
+  tickvals =seq(0.1,1, .1),
+  ticktext = paste(seq(10,100, 10)),
   tickangle = 0,
   tickfont = f2,
-  exponentformat = "E",
-  nticks= 10,
-  range= c(0, 1),
-  backgroundcolor="white",
-  gridcolor="black",
-  showbackground=TRUE,
+  range = c(0,1),
+  # exponentf
   zerolinecolor="black"
 )
 
 
 
-##Custom ticks
-axx <- list(
-  ticketmode = 'array',
-  ticktext = c("Huey", "Dewey", "Louie"),
-  tickvals = c(0,25,50),
-  range = c(-25,75)
-)
+# ##Custom ticks
+# axx <- list(
+#   ticketmode = 'array',
+#   ticktext = c("Huey", "Dewey", "Loormat = "E",
+#   nticks= 10,
+#   range= c(0, 100),
+#   ticktext = paste(seq(0,10, 10)),
+#    backgroundcolor="white",
+#   gridcolor="black",
+#   showbackground=TRUE,uie"),
+#   tickvals = c(0,25,50),
+#   range = c(-25,75)
+# )
 
 
-# p <-
+(p <-
 plot_ly() %>%
   add_markers(
     x = ~ dis_df$temp,
@@ -275,7 +292,7 @@ plot_ly() %>%
     z = dis_df$dis_prop/100,
     symbol = 'triangle',
     marker = list(
-      color = ~ dis_df$dis_prop,
+      color = ~ dis_df$dis_prop/100,
       size = 5,
       line = list(color = "black",
                   width = 1)
@@ -284,19 +301,19 @@ plot_ly() %>%
   add_surface(
     x = ~ x.seq,
     y = ~ y.seq,
-    z = t(fit)/100,
-    opacity = .9
+    z = t(fit/100),
+    opacity = .6
   ) %>%
   layout(title = tit,
          scene = list(
            xaxis = x,
            yaxis = y,
            zaxis = z
-         ))
+         )))
 
 
 
-plotly_IMAGE(p, width = 750, height = 850, format = "png", scale = 2,
+plotly_IMAGE(p, width = 750, height = 550, format = "png", scale = 2,
              out_file = here("scr/model/fig/surface_inf.png"))
 shell.exec(here("scr/model/fig/surface_inf.png"))
 

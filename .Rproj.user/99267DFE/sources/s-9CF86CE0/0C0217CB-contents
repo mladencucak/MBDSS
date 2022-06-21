@@ -135,12 +135,8 @@ for (i in names(wthls) ) {
   x <-
     wthls[[i]]  
   
-  
-  
   x$doy <-lubridate::yday(x$datetime)
   x
-  
-  
   if(
     #Remove each envir that does not contain biofix or end date 
     !leap_start %in% x$doy | !non_leap_start %in% x$doy |
@@ -228,7 +224,7 @@ load( here("scr/model/inf_model.RData"))
 
 # Set min thresholds to enable model runs
 rh_thresh <- 90
-temp_thresh <- 6
+temp_thresh <- 2
 rain_thresh <- .2
 
 # Extract variables as vectors for speed
@@ -258,7 +254,7 @@ if (sum(is.na(with(wth, rain, temp, rhum))) > 0) {
 
 
 # conditions for sporulation
-wet_dur <- ifelse(rh >= 90 | rain> rain_thresh, 1,0)
+wet_dur <- ifelse(rh >= rh_thresh | rain> rain_thresh, 1,0)
 
 criteria <- as.numeric(temp >= temp_thresh & wet_dur == 1)
 
@@ -488,7 +484,7 @@ MBRisk <- function(wth,
   
   # Set min thresholds to enable model runs
   rh_thresh <- 90
-  temp_thresh <- 6
+  temp_thresh <- 2
   rain_thresh <- .2
   
   # Extract variables as vectors for speed
@@ -580,7 +576,6 @@ system.time(MBRisk(wth, tb, mod))
 # Add traficlight system using the risk estimates proposed by the author of paper
 # Turn the code into a function and plot all of these to get an idea if it is ok
 # Calculate the average date of the initial predicted sporulation onset 
-# Plot this on the map? 
 # Observed forecasted data
 
 # Temps above 65F during infection period times 
@@ -595,6 +590,9 @@ for (i in 1:length(wthls)) {
   print(paste(i,",", round(i/length(wthls),3)))
   done <- i
 }
+
+ 
+
 
 beepr::beep()
 
