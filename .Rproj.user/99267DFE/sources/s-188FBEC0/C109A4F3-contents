@@ -140,7 +140,7 @@ dis_df <-
 
 deg <- 2
 
-fit_noint <- glmmTMB(dis_prop2 ~ poly(temp,2) + (wet_dur + I(log(wet_dur+1))), 
+fit_noint <- glmmTMB(dis_prop2 ~ poly(temp,3) + (wet_dur + I(log(wet_dur+1))), 
                        family = beta_family, 
                        data = dis_df)
 fit_int   <- glmmTMB(dis_prop2 ~ poly(temp,3) * (wet_dur + I(log(wet_dur+1))), 
@@ -192,8 +192,8 @@ ggplot(data = df_fit,aes(x= temp, y = dis_prop, colour = "Observed"))+
 
 save(fit, file = here("scr/model/inf_model.RData"))
 
-x.seq <- seq(min(dis_df$temp, na.rm=TRUE), max(dis_df$temp, na.rm=TRUE), by = 1) 
-y.seq <- seq(min(dis_df$wet_dur, na.rm=TRUE), max(dis_df$wet_dur, na.rm=TRUE), by = 1)
+x.seq <- seq(min(dis_df$temp, na.rm=TRUE), max(dis_df$temp, na.rm=TRUE), by = .1) 
+y.seq <- seq(min(dis_df$wet_dur, na.rm=TRUE), max(dis_df$wet_dur, na.rm=TRUE), by = .1)
 
 predfun <- function(x,y){
   newdat <- data.frame(temp = x, wet_dur=y)
@@ -202,14 +202,8 @@ predfun <- function(x,y){
 
 fit <- outer(x.seq, y.seq, Vectorize(predfun))
 
-fit[ ,1:2] <- 0
-# fit <- ifelse(fit>0, fit, 0)/100
-# fit <- ifelse(fit>1, 1, fit)
-
-
-
-library(plotly)
-conflict_prefer("layout", "plotly")
+# fit[ ,1:2] <- 0
+ 
 
 f1 <- list(
   family = "Arial, sans-serif",
