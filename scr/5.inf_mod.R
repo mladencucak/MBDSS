@@ -140,10 +140,10 @@ dis_df <-
 
 deg <- 2
 
-fit_noint <- glmmTMB(dis_prop2 ~ poly(temp,2) + (wet_dur + I(log(wet_dur+1))), 
+fit_noint <- glmmTMB(dis_prop2 ~ poly(temp,deg) + (wet_dur + I(log(wet_dur+1))), 
                        family = beta_family, 
                        data = dis_df)
-fit_int   <- glmmTMB(dis_prop2 ~ poly(temp,3) * (wet_dur + I(log(wet_dur+1))), 
+fit_int   <- glmmTMB(dis_prop2 ~ poly(temp,deg) * (wet_dur + I(log(wet_dur+1))), 
                              family = beta_family, 
                              data = dis_df)
 anova( fit_noint, fit_int)
@@ -176,8 +176,18 @@ ggplot(data = df_fit,aes(x= wet_dur, y = dis_prop, colour = "Observed"))+
   scale_color_manual(values = c( 
     Observed = "black", 
     Predicted = "red")) + 
-  facet_grid(~temp)
+  ylim(c(0,100))+
+  xlab("Wetness Duration (h)")+
+  ylab("Disease severity (%)")+
+  facet_grid(~temp)+
+  theme_bw()
 
+ggsave(
+  filename = here::here("scr", "model", "fig", paste0("wet_dur_fit_",deg, ".png")),
+  width = 8.2,
+  height = 7,
+  dpi = 300
+)
 
 ggplot(data = df_fit,aes(x= temp, y = dis_prop, colour = "Observed"))+
   geom_point()+
@@ -185,9 +195,17 @@ ggplot(data = df_fit,aes(x= temp, y = dis_prop, colour = "Observed"))+
   geom_line(aes(temp, fit, colour = "Predicted")) +
   geom_ribbon(aes(ymin=lwr,ymax=upr), alpha=0.3)+
   scale_color_manual(values = c( Observed = "black", Predicted = "red"))+
-  facet_grid(~wet_dur, scales = "free")
-
-
+  facet_grid(~wet_dur, scales = "free")+
+  xlab("Temperature (˚C)")+
+  ylab("Disease severity (%)")+
+  theme_bw()
+ggsave(
+  filename = here::here("scr", "model", "fig", paste0("temp_fit_",deg, ".png")),
+  width = 8.2,
+  height = 7,
+  dpi = 300
+)
+shell.exec(here::here("scr", "model", "fig"))
 
 
 save(fit, file = here("scr/model/inf_model.RData"))
@@ -203,13 +221,7 @@ predfun <- function(x,y){
 fit <- outer(x.seq, y.seq, Vectorize(predfun))
 
 fit[ ,1:2] <- 0
-# fit <- ifelse(fit>0, fit, 0)/100
-# fit <- ifelse(fit>1, 1, fit)
-
-
-
-library(plotly)
-conflict_prefer("layout", "plotly")
+ 
 
 f1 <- list(
   family = "Arial, sans-serif",
@@ -233,8 +245,10 @@ x <- list(
   tickangle = 30,
   tickfont = f2,
   exponentformat = "E",
-  nticks= 8,
+  nticks= length(unique(dis_df$temp)),
   range= c(min(x.seq), max(x.seq))%>% rev(),
+  tickvals =unique(dis_df$temp),
+  ticktext = unique(dis_df$temp),
   backgroundcolor="white",
   gridcolor="black",
   showbackground=TRUE,
@@ -247,8 +261,10 @@ y <- list(
   tickangle = -45,
   tickfont = f2,
   exponentformat = "E",
-  nticks = 8,
+  nticks = length(unique(dis_df$wet_dur)),
   range= c(min(y.seq), max(y.seq))%>% rev(),
+  tickvals =unique(dis_df$wet_dur),
+  ticktext = unique(dis_df$wet_dur),
   backgroundcolor="white",
   gridcolor="black",
   showbackground=TRUE,
