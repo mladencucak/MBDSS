@@ -207,8 +207,8 @@ ggsave(
 )
 shell.exec(here::here("scr", "model", "fig"))
 
-
-save(fit, file = here("scr/model/inf_model.RData"))
+mod <- fit
+save(mod, file = here("scr/model/inf_model.RData"))
 
 x.seq <- seq(min(dis_df$temp, na.rm=TRUE), max(dis_df$temp, na.rm=TRUE), by = 1) 
 y.seq <- seq(min(dis_df$wet_dur, na.rm=TRUE), max(dis_df$wet_dur, na.rm=TRUE), by = 1)

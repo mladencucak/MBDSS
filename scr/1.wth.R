@@ -535,7 +535,6 @@ wthd %>%
   ggtitle(ttl)
 ggsave(here::here("out","na", paste0("na_", ttl, ".png")))
 
-# From Oct to May
 ttl <- "2015-2021_daily_season" 
 wthh %>% 
   mutate(yr = year(datetime),
@@ -554,14 +553,17 @@ wthh %>%
          
          "Leaf wetness" =lw
   ) %>%
-  gg_miss_fct(x = ., fct = stna)+
-  
+  gg_miss_fct(x = ., fct = stna)+ 
   ylab("Weather Variable")+
   xlab("Weather Station")+
-  theme(legend.position = "top")
-ggsave(here::here("out","na", paste0("na_", ttl, ".png")),
+  labs(fill = "legend title") +
+  theme(legend.title = element_blank ()) 
+# theme(legend.position = "top")
+ggsave(here::here("out","wth", paste0("na_", ttl, ".png")),
        width = 8,
-       height =4.5)
+       height =4)
+shell.exec(here::here("out","wth", paste0("na_", ttl, ".png")))
+
 
 ttl <- "2015-2021_daily_season_low_na" 
 wthd %>% 

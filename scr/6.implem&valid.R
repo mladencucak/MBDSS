@@ -321,20 +321,20 @@ wth %>%
           # start_lab =   paste(month.abb[as.numeric(strsplit( start_lab, "-")[[1]][[1]])],
           #                     strsplit( start_lab, "-")[[1]][[2]], sep = "-")
   ) %>% 
-  mutate(col_inf = ifelse(inf < .2, "green",
-                          ifelse(inf >=.2& inf<med_max, "orange", 
-                                 ifelse(inf >= 40, "red", "gray")))) %>% 
+  # mutate(col_inf = ifelse(inf < .2, "green",
+  #                         ifelse(inf >=.2& inf<med_max, "orange", 
+  #                                ifelse(inf >= .35, "red", "gray")))) %>% 
   filter(doy<200) %>% 
   ggplot(aes(datetime, inf))+
-  # geom_tile(aes(x=datetime,y=50,fill=cut(inf,3)),height=100,alpha=0.2) +
+  geom_tile(aes(x=datetime,y=50,fill=cut(inf,3)),height=100,alpha=0.2) +
   # geom_tile(aes(x=datetime,y=50,fill=col_inf, group = 1),height=100,alpha=0.4)+
-  geom_rect(aes(xmin=spore_start, xmax=max(datetime), ymin=0, ymax=safe_max*100), 
-            fill="#99c140") +
-  geom_rect(aes(xmin=spore_start, xmax=max(datetime), ymin=safe_max*100, ymax=med_max*100), 
-            fill="#e7b416") +
-  geom_rect(aes(xmin=spore_start, xmax=max(datetime), ymin=med_max*100, ymax=100), 
-            fill="#cc3232") +
-  # scale_fill_manual(values = c("#99c140",   "#e7b416", "#cc3232"))+
+  # geom_rect(aes(xmin=spore_start, xmax=max(datetime), ymin=0, ymax=safe_max*100), 
+  #           fill="#99c140") +
+  # geom_rect(aes(xmin=spore_start, xmax=max(datetime), ymin=safe_max*100, ymax=med_max*100), 
+  #           fill="#e7b416") +
+  # geom_rect(aes(xmin=spore_start, xmax=max(datetime), ymin=med_max*100, ymax=100), 
+  #           fill="#cc3232") +
+  # # scale_fill_manual(values = c("#99c140",   "#e7b416", "#cc3232"))+
   
   geom_line(aes(datetime, inf))+
   scale_y_continuous(limits = c(0,100))+
@@ -393,9 +393,6 @@ shell.exec(here("scr/model/visualisation.png"))
                 # start_lab =   paste(month.abb[as.numeric(strsplit( start_lab, "-")[[1]][[1]])],
                 #                     strsplit( start_lab, "-")[[1]][[2]], sep = "-")
         ) %>% 
-        mutate(col_inf = ifelse(inf < .2, "green",
-                                ifelse(inf >=.2& inf<.4, "orange", 
-                                       ifelse(inf >= 40, "red", "gray")))) %>% 
         filter(doy<200) %>% 
         ggplot(aes(datetime, inf))+
         # geom_tile(aes(x=datetime,y=50,fill=cut(inf,3)),height=100,alpha=0.2) +
@@ -430,9 +427,6 @@ shell.exec(here("scr/model/visualisation.png"))
               # start_lab =   paste(month.abb[as.numeric(strsplit( start_lab, "-")[[1]][[1]])],
               #                     strsplit( start_lab, "-")[[1]][[2]], sep = "-")
       ) %>% 
-      mutate(col_inf = ifelse(inf < 20, "green",
-                              ifelse(inf >=20& inf<40, "orange", 
-                                     ifelse(inf >= 40, "red", "gray")))) %>% 
       filter(doy<200) %>% 
       ggplot(aes(datetime, inf))+
       # geom_tile(aes(x=datetime,y=50,fill=cut(inf,3)),height=100,alpha=0.2) +
