@@ -554,7 +554,8 @@ wthh %>%
          
          "Leaf wetness" =lw
   ) %>%
-  gg_miss_fct(x = ., fct = stna)+ 
+  gg_miss_fct(x = ., fct = stna)+
+  
   ylab("Weather Variable")+
   xlab("Weather Station")+
   theme(legend.position = "top")

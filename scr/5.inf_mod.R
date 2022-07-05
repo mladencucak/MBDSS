@@ -134,11 +134,11 @@ dis_df <-
   bind_rows(
     dis_df,
     dis_df[dis_df$temp == 2, ]%>% 
-      mutate( temp =32)
+      mutate( temp =30)
   )
 
 
-deg <- 2
+deg <- 3
 
 fit_noint <- glmmTMB(dis_prop2 ~ poly(temp,deg) + (wet_dur + I(log(wet_dur+1))), 
                        family = beta_family, 
