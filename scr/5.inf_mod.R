@@ -15,7 +15,6 @@ list.of.packages <-
     "data.table",
     "GGally",
     "here",
-    "xlsx",
     "reshape2",
     "conflicted",
     "lubridate",
@@ -60,10 +59,10 @@ conflict_prefer("layout", "plotly")
 rm(packages_load, list.of.packages, new.packages)
 
 
-if(!c("insight", "performance") %in% installed.packages()){
-install.packages(c("insight", "performance"), repos = 'https://easystats.r-universe.dev')
-}
+if(!c("insight") %in% installed.packages())install.packages(c("insight"), repos = 'https://easystats.r-universe.dev')
+if(!c("insight") %in% installed.packages())install.packages(c("performance"), repos = 'https://easystats.r-universe.dev')
 
+                                                            
 lapply(c("insight", "performance"), require, character.only = TRUE)
 
 
@@ -138,12 +137,12 @@ dis_df <-
   )
 
 
-deg <- 3
+ 
 
-fit_noint <- glmmTMB(dis_prop2 ~ poly(temp,deg) + (wet_dur + I(log(wet_dur+1))), 
+fit_noint <- glmmTMB(dis_prop2 ~ poly(temp,3) + (wet_dur + I(log(wet_dur+1))), 
                        family = beta_family, 
                        data = dis_df)
-fit_int   <- glmmTMB(dis_prop2 ~ poly(temp,deg) * (wet_dur + I(log(wet_dur+1))), 
+fit_int   <- glmmTMB(dis_prop2 ~ poly(temp,3) * (wet_dur + I(log(wet_dur+1))), 
                              family = beta_family, 
                              data = dis_df)
 anova( fit_noint, fit_int)

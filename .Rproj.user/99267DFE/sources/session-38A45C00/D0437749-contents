@@ -1,0 +1,178 @@
+# Sample weather data
+(wth <- wthls[[3]])
+
+
+
+# Probabilities for sporulation onset
+load(here("scr/model/cu_probs.RData"))
+tb
+# # A tibble: 2 × 4
+#     mng   means  sdev   num
+#   1 high  1829.  170.     5
+#   2 low   1620.  126.     7
+
+cu <- ifelse(wth$temp > 0 & wth$temp < 7.2, 1, 0)
+wth$cusum <- cumsum(cu)
+
+wth$prob_high <- pnorm(wth$cusum,
+                       tb[tb$mng == "high", "means"] %>% pull,
+                       tb[tb$mng == "high", "sdev"] %>% pull)
+wth$prob_low <- pnorm(wth$cusum,
+                      tb[tb$mng == "low", "means"] %>% pull, 
+                      tb[tb$mng == "low", "sdev"] %>% pull)
+
+start.prob <- .01
+
+wth$start_high <-wth[which.min(abs(wth$prob_high - start.prob)), "datetime" ]%>% pull()
+wth$start_low <-wth[which.min(abs(wth$prob_low - start.prob)),"datetime" ]%>% pull()
+
+
+wth[3000:3200, ] %>% 
+  mutate(dte = as.Date(datetime)) %>% 
+  select(dte, cusum, prob_high, prob_low) %>% 
+  group_by(dte) %>% 
+  summarise_all(mean)
+
+##################################################
+# Model implementation
+# 1. Sporulation conditions initiation
+# 2. Infection Model
+##########################################################
+# Starts when minimum conditions for the minimum conditions for 
+# the sporulation have been met, set to  - prob >.01  
+
+
+# load the model 
+load( here("scr/model/inf_model.RData"))
+
+# Set min thresholds to enable model runs
+rh_thresh <- 90
+temp_thresh <- 2
+rain_thresh <- .2
+
+# Extract variables as vectors for speed
+wth[["rain"]] -> rain
+if ("rhum" %in% names(wth))  wth[["rhum"]] -> rh
+if ("rh" %in% names(wth))  wth[["rh"]] -> rh
+wth[["temp"]] -> temp
+
+
+# This function to infill missing values to let the model run
+infill_gap <- 12
+
+if (sum(is.na(with(wth, rain, temp, rhum))) > 0) {
+  temp <-
+    round(zoo::na.spline(temp, na.rm = FALSE, maxgap = infill_gap), 1)
+  rh <-
+    round(zoo::na.spline(rh, na.rm = FALSE, maxgap = infill_gap), 0)
+  rh  <- sapply(rh, function(x) ifelse(x > 100, x <- 100, x))
+  # Rain is infilled based on min rh wethens threshold to let the model run
+  rain <- ifelse(rh>=rh_thresh, .2 )
+}
+
+if (sum(is.na(with(wth, rain, temp, rhum))) > 0) {
+  stop(print("The sum of NAs is more than 7! Check your weather data."))
+}
+
+
+
+# conditions for sporulation
+wet_dur <- ifelse(rh >= rh_thresh | rain> rain_thresh, 1,0)
+
+criteria <- as.numeric(temp >= temp_thresh & wet_dur == 1)
+
+
+# criteria  <- c(0,1,0,1,0,0,1,1,0,0,0,1,1,0,0,0)
+#The accumulation breaks if the conditions aren't met for more than infstop hours
+infstop <- 2 + 1
+criteria <- c(criteria, rep(0, infstop))
+
+for (k in c(1:c(length(criteria)-infstop))){
+  # k = 2
+  if(criteria[k] == 1& criteria[k + infstop] == 1 ) criteria[k : c(k + infstop)] <- 1
+}
+criteria <-  criteria[1:c(length(criteria)-infstop)]
+#
+
+# cumulative sum of hours that meet the criteria for sporulation with restart at zero
+(criteria_sum <-
+    stats::ave(criteria, cumsum(criteria == 0), FUN = cumsum)
+)
+dff <- data.frame(temp = temp, wet_dur=criteria_sum)
+
+dff$inf <- plogis(predict(mod, newdata=dff))
+
+dff$inf <-ifelse(dff$wet_dur == 0,0, dff$inf)
+dff$inf <-ifelse(dff$temp <= 0,0, dff$inf)
+
+
+wth$inf <- dff$inf
+
+
+
+wth <-
+  mutate(wth,doy = yday(datetime)) %>% 
+  filter(doy <200) %>% 
+  pivot_longer(cols = c(prob_low, prob_high),
+               names_to = "mng" ) %>% 
+  mutate(mng=ifelse(mng == "prob_low", "Low", "High"),
+         inf = inf * 100) %>% 
+  pivot_longer(cols = c(start_low, start_high),
+               values_to = "spore_start",
+               names_to = "spore_start_mng" )  %>% 
+  mutate(spore_start_mng=ifelse(spore_start_mng == "start_low", "Low", "High")) %>% 
+  
+  mutate(value = 100 *value)
+
+
+#Parameteres
+safe_max <- .2
+med_max <- .35
+
+text_size <- 13
+
+
+format.mmdd <- function(x, format = "%b-%d", ...) format(as.Date(x), format = format, ...)
+
+
+
+
+(p1 <- 
+    wth %>%
+    mutate(inf = ifelse(inf == 0 ,NA, inf)) %>%
+    group_by(mng) %>% 
+    mutate(inf = ifelse(datetime <spore_start ,NA, inf)) %>%  
+    mutate( start_lab  = substring(as.character(as.Date(spore_start )), 6),
+            # start_lab =   paste(month.abb[as.numeric(strsplit( start_lab, "-")[[1]][[1]])],
+            #                     strsplit( start_lab, "-")[[1]][[2]], sep = "-")
+    ) %>% 
+    mutate(col_inf = ifelse(inf < .2, "green",
+                            ifelse(inf >=.2& inf<med_max, "orange",
+                                   ifelse(inf >= .35, "red", "gray")))) %>%
+    filter(doy<200) %>% 
+    ggplot(aes(datetime, inf))+
+    geom_tile(aes(x=datetime,y=50,fill=cut(inf,3)),height=100,alpha=0.2) +
+    # geom_tile(aes(x=datetime,y=50,fill=col_inf, group = 1),height=100,alpha=0.4)+
+    geom_rect(aes(xmin=spore_start, xmax=max(datetime), ymin=0, ymax=safe_max*100),
+              fill="#99c140") +
+    geom_rect(aes(xmin=spore_start, xmax=max(datetime), ymin=safe_max*100, ymax=med_max*100),
+              fill="#e7b416") +
+    geom_rect(aes(xmin=spore_start, xmax=max(datetime), ymin=med_max*100, ymax=100),
+              fill="#cc3232") +
+    # scale_fill_manual(values = c("#99c140",   "#e7b416", "#cc3232"))+
+    
+    geom_line(aes(datetime, inf))+
+    scale_y_continuous(limits = c(0,100))+
+    geom_point(aes(spore_start, .04, color = spore_start_mng, group  =2), shape = 25, size  = 2)+
+    geom_text(aes(label = start_lab , x = spore_start, 
+                  y = ifelse(spore_start_mng == "Low", 10,30) ),
+              check_overlap = TRUE,angle = 90, size = 4.5)+
+    ylab("Infection Risk(%)")+
+    
+    theme_bw()+
+    theme(axis.title.x = element_blank(),
+          legend.position = "none",
+          text = element_text(size = text_size) 
+    )
+)
+ 

@@ -176,9 +176,10 @@ length(wthls)
 # 1. Sporulation conditions initiation
 ################################################
 # Sample weather data
+# Sample weather data
 (wth <- wthls[[3]])
 
- 
+
 
 # Probabilities for sporulation onset
 load(here("scr/model/cu_probs.RData"))
@@ -192,11 +193,11 @@ cu <- ifelse(wth$temp > 0 & wth$temp < 7.2, 1, 0)
 wth$cusum <- cumsum(cu)
 
 wth$prob_high <- pnorm(wth$cusum,
-                tb[tb$mng == "high", "means"] %>% pull,
-                tb[tb$mng == "high", "sdev"] %>% pull)
+                       tb[tb$mng == "high", "means"] %>% pull,
+                       tb[tb$mng == "high", "sdev"] %>% pull)
 wth$prob_low <- pnorm(wth$cusum,
-               tb[tb$mng == "low", "means"] %>% pull, 
-               tb[tb$mng == "low", "sdev"] %>% pull)
+                      tb[tb$mng == "low", "means"] %>% pull, 
+                      tb[tb$mng == "low", "sdev"] %>% pull)
 
 start.prob <- .01
 
@@ -217,7 +218,7 @@ wth[3000:3200, ] %>%
 ##########################################################
 # Starts when minimum conditions for the minimum conditions for 
 # the sporulation have been met, set to  - prob >.01  
-  
+
 
 # load the model 
 load( here("scr/model/inf_model.RData"))
@@ -276,11 +277,14 @@ criteria <-  criteria[1:c(length(criteria)-infstop)]
     stats::ave(criteria, cumsum(criteria == 0), FUN = cumsum)
 )
 dff <- data.frame(temp = temp, wet_dur=criteria_sum)
-wth$inf <- plogis(predict(mod, newdata=dff))
 
-# dff$inf <-ifelse(dff$wet_dur == 0,0, dff$inf)
+dff$inf <- plogis(predict(mod, newdata=dff))
+
+dff$inf <-ifelse(dff$wet_dur == 0,0, dff$inf)
+dff$inf <-ifelse(dff$temp <= 0,0, dff$inf)
 
 
+wth$inf <- dff$inf
 
 
 
@@ -295,7 +299,7 @@ wth <-
                values_to = "spore_start",
                names_to = "spore_start_mng" )  %>% 
   mutate(spore_start_mng=ifelse(spore_start_mng == "start_low", "Low", "High")) %>% 
-         
+  
   mutate(value = 100 *value)
 
 
@@ -303,52 +307,52 @@ wth <-
 safe_max <- .2
 med_max <- .35
 
-text_size <- 14
- 
- 
+text_size <- 13
+
+
 format.mmdd <- function(x, format = "%b-%d", ...) format(as.Date(x), format = format, ...)
 
- 
- 
+
+
 
 (p1 <- 
-wth %>%
-  
-  mutate(inf = ifelse(inf == 0 ,NA, inf)) %>%
-  group_by(mng) %>% 
-  mutate(inf = ifelse(datetime <spore_start ,NA, inf)) %>%  
-  mutate( start_lab  = substring(as.character(as.Date(spore_start )), 6),
-          # start_lab =   paste(month.abb[as.numeric(strsplit( start_lab, "-")[[1]][[1]])],
-          #                     strsplit( start_lab, "-")[[1]][[2]], sep = "-")
-  ) %>% 
-  # mutate(col_inf = ifelse(inf < .2, "green",
-  #                         ifelse(inf >=.2& inf<med_max, "orange", 
-  #                                ifelse(inf >= .35, "red", "gray")))) %>% 
-  filter(doy<200) %>% 
-  ggplot(aes(datetime, inf))+
-  geom_tile(aes(x=datetime,y=50,fill=cut(inf,3)),height=100,alpha=0.2) +
-  # geom_tile(aes(x=datetime,y=50,fill=col_inf, group = 1),height=100,alpha=0.4)+
-  # geom_rect(aes(xmin=spore_start, xmax=max(datetime), ymin=0, ymax=safe_max*100), 
-  #           fill="#99c140") +
-  # geom_rect(aes(xmin=spore_start, xmax=max(datetime), ymin=safe_max*100, ymax=med_max*100), 
-  #           fill="#e7b416") +
-  # geom_rect(aes(xmin=spore_start, xmax=max(datetime), ymin=med_max*100, ymax=100), 
-  #           fill="#cc3232") +
-  # # scale_fill_manual(values = c("#99c140",   "#e7b416", "#cc3232"))+
-  
-  geom_line(aes(datetime, inf))+
-  scale_y_continuous(limits = c(0,100))+
-  geom_point(aes(spore_start, .04, color = spore_start_mng, group  =2), shape = 25, size  = 2)+
-  geom_text(aes(label = start_lab , x = spore_start, 
-                y = ifelse(spore_start_mng == "Low", 10,30) ),
-            check_overlap = TRUE,angle = 90, size = 4.5)+
-  ylab("Infection Risk(%)")+
-  
-  theme_bw()+
-  theme(axis.title.x = element_blank(),
-        legend.position = "none",
-        text = element_text(size = text_size))
-  )
+    wth %>%
+    mutate(inf = ifelse(inf == 0 ,NA, inf)) %>%
+    group_by(mng) %>% 
+    mutate(inf = ifelse(datetime <spore_start ,NA, inf)) %>%  
+    mutate( start_lab  = substring(as.character(as.Date(spore_start )), 6),
+            # start_lab =   paste(month.abb[as.numeric(strsplit( start_lab, "-")[[1]][[1]])],
+            #                     strsplit( start_lab, "-")[[1]][[2]], sep = "-")
+    ) %>% 
+    mutate(col_inf = ifelse(inf < .2, "green",
+                            ifelse(inf >=.2& inf<med_max, "orange",
+                                   ifelse(inf >= .35, "red", "gray")))) %>%
+    filter(doy<200) %>% 
+    ggplot(aes(datetime, inf))+
+    # geom_tile(aes(x=datetime,y=50,fill=cut(inf,3)),height=100,alpha=0.2) +
+    # geom_tile(aes(x=datetime,y=50,fill=col_inf, group = 1),height=100,alpha=0.4)+
+    geom_rect(aes(xmin=spore_start, xmax=max(datetime), ymin=0, ymax=safe_max*100),
+              fill="#99c140") +
+    geom_rect(aes(xmin=spore_start, xmax=max(datetime), ymin=safe_max*100, ymax=med_max*100),
+              fill="#e7b416") +
+    geom_rect(aes(xmin=spore_start, xmax=max(datetime), ymin=med_max*100, ymax=100),
+              fill="#cc3232") +
+    # scale_fill_manual(values = c("#99c140",   "#e7b416", "#cc3232"))+
+    
+    geom_line(aes(datetime, inf))+
+    scale_y_continuous(limits = c(0,100))+
+    geom_point(aes(spore_start, .04, color = spore_start_mng, group  =2), shape = 25, size  = 2)+
+    geom_text(aes(label = start_lab , x = spore_start, 
+                  y = ifelse(spore_start_mng == "Low", 10,30) ),
+              check_overlap = TRUE,angle = 90, size = 4.5)+
+    ylab("Infection Risk(%)")+
+    
+    theme_bw()+
+    theme(axis.title.x = element_blank(),
+          legend.position = "none",
+          text = element_text(size = text_size) 
+    )
+)
 
 
 (p2 <-
@@ -359,7 +363,7 @@ ggplot() +
   scale_y_continuous(limits = c(0, 100))+
   geom_point(aes(  spore_start, .04, fill = spore_start_mng), 
              shape = 25, size  = 2, guide_legend = FALSE)+
-    ylab("Sporulation initiated(%)")+
+    ylab(expression(paste("Sporulation initiated \n (probability in %)")))+
     scale_color_discrete(name ="Management level:" )+
     scale_fill_discrete(name ="Management level:" )+
     theme_bw()+
@@ -369,7 +373,9 @@ ggplot() +
           )+
     theme(panel.grid.major.y = element_line(color = "black",
                                             size = 0.5,
-                                            linetype = 2))
+                                            linetype = 2),
+          axis.title.y = element_text(vjust=-2.1)
+    )
   )
 
  
@@ -381,81 +387,74 @@ ggsave(plot = plotf,
        height = 7,
        dpi = 600)
 shell.exec(here("scr/model/visualisation.png"))
+shell.exec(here("scr/model"))
 
+    # 
+    # wth %>%
+    #   filter(doy %in% c(40:50)) %>% 
+    # 
+    #     mutate(inf = ifelse(inf == 0 ,NA, inf)) %>%
+    #     group_by(mng) %>% 
+    #     mutate(inf = ifelse(datetime <spore_start ,NA, inf)) %>%  
+    #     mutate( start_lab  = substring(as.character(as.Date(spore_start )), 6),
+    #             # start_lab =   paste(month.abb[as.numeric(strsplit( start_lab, "-")[[1]][[1]])],
+    #             #                     strsplit( start_lab, "-")[[1]][[2]], sep = "-")
+    #     ) %>% 
+    #     filter(doy<200) %>% 
+    #     ggplot(aes(datetime, inf))+
+    #     # geom_tile(aes(x=datetime,y=50,fill=cut(inf,3)),height=100,alpha=0.2) +
+    #   geom_tile(aes(x=datetime,y=50,fill=col_inf, group = 1),height=100,alpha=0.4)+
+    #   # geom_rect(aes(xmin=spore_start, xmax=max(datetime), ymin=0, ymax=safe_max*100), 
+    #   #           fill="#99c140") +
+    #   # geom_rect(aes(xmin=spore_start, xmax=max(datetime), ymin=safe_max*100, ymax=med_max*100), 
+    #   #           fill="#e7b416") +
+    #   # geom_rect(aes(xmin=spore_start, xmax=max(datetime), ymin=med_max*100, ymax=100), 
+    #   #           fill="#cc3232") +
+    #   scale_fill_manual(values = c("#99c140",   "#e7b416", "#cc3232"))+
+    #     
+    #     geom_line(aes(datetime, inf))+
+    #     scale_y_continuous(limits = c(0,100))+
+    #     geom_point(aes(spore_start, .04, color = spore_start_mng, group  =2), shape = 25, size  = 2)+
+    #     geom_text(aes(label = start_lab , x = spore_start, 
+    #                   y = ifelse(spore_start_mng == "Low", 10,30),
+    #                   color = spore_start_mng),
+    #               check_overlap = TRUE,angle = 90, size = 4.5)+
+    #     ylab("Infection Risk(%)")+
+    #     
+    #     theme_bw()+
+    #     theme(axis.title.x = element_blank(),
+    #           legend.position = "none")
+    # 
+    # 
+    # wth %>% 
+    #   mutate(inf = ifelse(inf == 0 ,NA, inf)) %>%
+    #   group_by(mng) %>% 
+    #   mutate(inf = ifelse(datetime <spore_start ,NA, inf)) %>%  
+    #   mutate( start_lab  = substring(as.character(as.Date(spore_start )), 6),
+    #           # start_lab =   paste(month.abb[as.numeric(strsplit( start_lab, "-")[[1]][[1]])],
+    #           #                     strsplit( start_lab, "-")[[1]][[2]], sep = "-")
+    #   ) %>% 
+    #   filter(doy<200) %>% 
+    #   ggplot(aes(datetime, inf))+
+    #   # geom_tile(aes(x=datetime,y=50,fill=cut(inf,3)),height=100,alpha=0.2) +
+    #   geom_tile(aes(x=datetime,y=50,fill=col_inf),height=100,alpha=0.4)+
+    #   scale_fill_manual(values = c("green", "orange", "red", "grey", "black"))+
+    #   
+    #   geom_line(aes(datetime, inf))+
+    #   scale_y_continuous(limits = c(0,100))+
+    #   geom_point(aes(  spore_start, .04, fill = spore_start_mng), shape = 25, size  = 2)+
+    #   geom_text(aes(label = start_lab , x = spore_start, 
+    #                 y = ifelse(spore_start_mng == "Low", 10,30),
+    #                 color = spore_start_mng),
+    #             check_overlap = TRUE,angle = 90, size = 4.5)+
+    #   ylab("Infection Risk(%)")+
+    #   
+    #   theme_bw()+
+    #   theme(axis.title.x = element_blank(),
+    #         legend.position = "none")
+    # 
+    # 
  
-    wth %>%
-      filter(doy %in% c(40:50)) %>% 
-
-        mutate(inf = ifelse(inf == 0 ,NA, inf)) %>%
-        group_by(mng) %>% 
-        mutate(inf = ifelse(datetime <spore_start ,NA, inf)) %>%  
-        mutate( start_lab  = substring(as.character(as.Date(spore_start )), 6),
-                # start_lab =   paste(month.abb[as.numeric(strsplit( start_lab, "-")[[1]][[1]])],
-                #                     strsplit( start_lab, "-")[[1]][[2]], sep = "-")
-        ) %>% 
-        filter(doy<200) %>% 
-        ggplot(aes(datetime, inf))+
-        # geom_tile(aes(x=datetime,y=50,fill=cut(inf,3)),height=100,alpha=0.2) +
-      geom_tile(aes(x=datetime,y=50,fill=col_inf, group = 1),height=100,alpha=0.4)+
-      # geom_rect(aes(xmin=spore_start, xmax=max(datetime), ymin=0, ymax=safe_max*100), 
-      #           fill="#99c140") +
-      # geom_rect(aes(xmin=spore_start, xmax=max(datetime), ymin=safe_max*100, ymax=med_max*100), 
-      #           fill="#e7b416") +
-      # geom_rect(aes(xmin=spore_start, xmax=max(datetime), ymin=med_max*100, ymax=100), 
-      #           fill="#cc3232") +
-      scale_fill_manual(values = c("#99c140",   "#e7b416", "#cc3232"))+
-        
-        geom_line(aes(datetime, inf))+
-        scale_y_continuous(limits = c(0,100))+
-        geom_point(aes(spore_start, .04, color = spore_start_mng, group  =2), shape = 25, size  = 2)+
-        geom_text(aes(label = start_lab , x = spore_start, 
-                      y = ifelse(spore_start_mng == "Low", 10,30),
-                      color = spore_start_mng),
-                  check_overlap = TRUE,angle = 90, size = 4.5)+
-        ylab("Infection Risk(%)")+
-        
-        theme_bw()+
-        theme(axis.title.x = element_blank(),
-              legend.position = "none")
- 
-    
-    wth %>% 
-      mutate(inf = ifelse(inf == 0 ,NA, inf)) %>%
-      group_by(mng) %>% 
-      mutate(inf = ifelse(datetime <spore_start ,NA, inf)) %>%  
-      mutate( start_lab  = substring(as.character(as.Date(spore_start )), 6),
-              # start_lab =   paste(month.abb[as.numeric(strsplit( start_lab, "-")[[1]][[1]])],
-              #                     strsplit( start_lab, "-")[[1]][[2]], sep = "-")
-      ) %>% 
-      filter(doy<200) %>% 
-      ggplot(aes(datetime, inf))+
-      # geom_tile(aes(x=datetime,y=50,fill=cut(inf,3)),height=100,alpha=0.2) +
-      geom_tile(aes(x=datetime,y=50,fill=col_inf),height=100,alpha=0.4)+
-      scale_fill_manual(values = c("green", "orange", "red", "grey", "black"))+
-      
-      geom_line(aes(datetime, inf))+
-      scale_y_continuous(limits = c(0,100))+
-      geom_point(aes(  spore_start, .04, fill = spore_start_mng), shape = 25, size  = 2)+
-      geom_text(aes(label = start_lab , x = spore_start, 
-                    y = ifelse(spore_start_mng == "Low", 10,30),
-                    color = spore_start_mng),
-                check_overlap = TRUE,angle = 90, size = 4.5)+
-      ylab("Infection Risk(%)")+
-      
-      theme_bw()+
-      theme(axis.title.x = element_blank(),
-            legend.position = "none")
-    
-    
-    
-ggplot(wth, aes(datetime , cusum))+
-  geom_line()
-# ggplot(wth, aes(datetime , prob_low))+
-#   geom_line()
-# 
-
- 
-
 
 
 

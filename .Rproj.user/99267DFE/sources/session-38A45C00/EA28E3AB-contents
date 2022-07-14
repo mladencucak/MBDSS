@@ -114,9 +114,11 @@ baseplot+
               shape = type,
                color = type
           ),
+          alpha = .6,
           # color = "black",
            # shape = 17,
-          size = 1.3) +
+          size = 1.5,
+          stroke = 1.3) +
   coord_sf(
     xlim = c(-123.4, -121.9),
     ylim = c(48.9759, 47.7),
@@ -125,23 +127,25 @@ baseplot+
   # scale_color_brewer(palette = "Set1")+
   # scale_fill_brewer(palette = "Set1")+
   geom_text_repel(data = df_loc_sf[df_loc_sf$name != "corvallis", ],
-                  aes(x = lon, y = lat, label = name,  group = type ),
-                  size = 3.2)+
+                  aes(x = lon, y = lat, label = name,  group = type, color = type ),
+                  size = 3.2, 
+                  show.legend = FALSE)+
   scale_color_manual(
     name = "Data:",
     labels = c( "Biological sites","Weather stations"),
-    values = c("blue", "black")
+    values = c("darkgreen", "black")
   ) +
   scale_fill_manual(
     name = "Data:",
     labels = c( "Biological sites","Weather stations"),
-    values = c("blue", "black")
+    values = c("darkgreen", "black")
   ) +
   scale_shape_manual(
     name = "Data:",
     labels = c( "Biological sites","Weather stations"),
-    values = c(16, 17)
+    values = c(3, 4)
   )+
+  guides(color = guide_legend(override.aes = list(fill = "white"))) +
   theme(
     text = element_text(size = 11, family = "TT Times New Roman"),
     legend.position = c(.20, .89) #place legend inside the plotting area
@@ -149,8 +153,8 @@ baseplot+
 
 ggsave(
     file = here::here("out" , "map_wth.png"),
-    width = 12,
-    height = 16,
+    width = 16,
+    height = 22,
     units = "cm",
     dpi = 400
   )
