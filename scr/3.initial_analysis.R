@@ -136,13 +136,13 @@ dta %>%
   group_by(chill_start) %>% 
   
   mutate(cv_overall =  sd(cu_) / mean(cu_) * 100,
-         cv_overall = paste0("Overal CV =\n ",round(cv_overall,2), "(", min(cu_),",", max(cu_),")"),
+         cv_overall = paste0("Overal CV =\n ",round(cv_overall,2), "(", min(cu_),", ", max(cu_),")"),
          lab_pos_overall = min(cu_)-200,
          mng = stringr::str_to_title(mng) ) %>%   
 group_by(chill_start, mng) %>% 
   
   mutate(cv_group =  sd(cu_) / mean(cu_) * 100,
-         cv_group = paste0(round(cv_group,2), "(", min(cu_),",", max(cu_),")")
+         cv_group = paste0(round(cv_group,2), "(", min(cu_),", ", max(cu_),")")
          )  
 
 
@@ -156,7 +156,7 @@ dta_mod %>%
   
   labs(
     x = "Start date of the accumulation period",
-    y = "Chilling units (0 - 7.2˚C)",
+    y = "Chilling units (0 – 7.2 ˚C)",
     # title = tit,
     # subtitle = "Coeficient of variation between accumulations of different methods",
     color = "Management"
@@ -182,7 +182,7 @@ ggsave(
   height = 6.5,
   dpi = 300
 )
-shell.exec(here::here("out", "initial_res", "chill", paste0(tit, ".png")))
+shell.exec(here::here("out", paste0(tit, ".png")))
 
  
 #######################################################
