@@ -175,4 +175,19 @@ format.mmdd <- function(x, format = "%b-%d", ...) format(as.Date(x), format = fo
           text = element_text(size = text_size) 
     )
 )
+
+
+devtools::install_github("mladencucak/AppTest")
+AppTest::GrowModAPP()
+AppTest::HLIRApp()
+
+
+remotes::install_github("mladencucak/epiCrop" )
+library("epiCrop")
+epiCrop::
+
+
+
+
+
  

@@ -136,7 +136,7 @@ dta %>%
   group_by(chill_start) %>% 
   
   mutate(cv_overall =  sd(cu_) / mean(cu_) * 100,
-         cv_overall = paste0("Overal CV =\n ",round(cv_overall,2), "(", min(cu_),", ", max(cu_),")"),
+         cv_overall = paste0("Overall CV =\n ",round(cv_overall,2), "(", min(cu_),", ", max(cu_),")"),
          lab_pos_overall = min(cu_)-200,
          mng = stringr::str_to_title(mng) ) %>%   
 group_by(chill_start, mng) %>% 
